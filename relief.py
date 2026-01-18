@@ -39,7 +39,7 @@ TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 SHEET_ID = "1bBnCG5ODsqQspRj_-fViRIXJGMo0w7hgbTH6p56gNuM"
 
 # Firebase bucket
-FIREBASE_BUCKET = "relief-31bc6.appspot.com"
+FIREBASE_BUCKET = "relief-31bc6.firebasestorage.app"
 
 # ==================================================
 # FIREBASE INIT
