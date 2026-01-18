@@ -200,7 +200,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ==================================================
-# IMAGE HANDLER (2 GAMBAR → 1 ROW)
+# IMAGE HANDLER (2 GAMBAR → 1 ROW + AUTO IMAGE())
 # ==================================================
 async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -231,7 +231,11 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         img1, img2 = context.user_data["images"]
 
-        sheet.append_row([
+        # Dapatkan row terakhir +1
+        last_row = len(sheet.get_all_values()) + 1
+
+        # Masukkan data + URL gambar
+        sheet.update(f"A{last_row}:I{last_row}", [[
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # Timestamp
             datetime.now().strftime("%Y-%m-%d"),          # Tarikh
             context.user_data.get("masa", ""),
@@ -241,7 +245,11 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.user_data.get("subjek", ""),
             img1,
             img2
-        ])
+        ]])
+
+        # Masukkan formula IMAGE() automatik
+        sheet.update(f"J{last_row}", f'=IMAGE(H{last_row})')
+        sheet.update(f"K{last_row}", f'=IMAGE(I{last_row})')
 
         context.user_data.clear()
 
