@@ -29,12 +29,15 @@ from firebase_admin import credentials, storage
 import gspread
 from google.oauth2.service_account import Credentials
 
+
 # ==================================================
 # CONFIG (ENV VARIABLES)
 # ==================================================
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+
 SHEET_ID = "1bBnCG5ODsqQspRj_-fViRIXJGMo0w7hgbTH6p56gNuM"
 FIREBASE_BUCKET = "relief-31bc6.firebasestorage.app"
+
 
 # ==================================================
 # FIREBASE INIT
@@ -48,6 +51,7 @@ firebase_admin.initialize_app(firebase_creds, {
 })
 
 bucket = storage.bucket()
+
 
 # ==================================================
 # GOOGLE SHEET INIT
@@ -64,6 +68,7 @@ sheet_creds = Credentials.from_service_account_info(
 
 gc = gspread.authorize(sheet_creds)
 sheet = gc.open_by_key(SHEET_ID).sheet1
+
 
 # ==================================================
 # DATA
@@ -136,11 +141,14 @@ SUBJEK_LIST = [
     "Moral", "Pendidikan Islam"
 ]
 
+
 # ==================================================
 # /start
 # ==================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
+
+    # Button Isi Rekod sentiasa ada
     keyboard = [[InlineKeyboardButton("📝 Isi Rekod", callback_data="mula")]]
     await update.message.reply_text(
         "🤖 *Relief Check-In Tracker*\n\nTekan butang di bawah untuk mula.",
@@ -148,71 +156,102 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
+
 # ==================================================
 # CALLBACK FLOW
 # ==================================================
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+
     key, *rest = query.data.split("|")
     value = rest[0] if rest else None
 
+    # Button Isi Rekod sentiasa ada
+    base_keyboard = [[InlineKeyboardButton("📝 Isi Rekod", callback_data="mula")]]
+
     if key == "mula":
         keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
-        await query.edit_message_text("📅 Pilih masa:", reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text(
+            "📅 Pilih masa:",
+            reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard)
+        )
+
     elif key == "masa":
         context.user_data["masa"] = value
-        keyboard = [[InlineKeyboardButton(g, callback_data=f"guru_pengganti|{g}")] for g in GURU_LIST]
-        await query.edit_message_text("👨‍🏫 Pilih guru pengganti:", reply_markup=InlineKeyboardMarkup(keyboard))
+        # Hijau bulat untuk guru pengganti
+        keyboard = [[InlineKeyboardButton(f"🟢 {g}", callback_data=f"guru_pengganti|{g}")] for g in GURU_LIST]
+        await query.edit_message_text(
+            "👨‍🏫 Pilih guru pengganti:",
+            reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard)
+        )
+
     elif key == "guru_pengganti":
         context.user_data["guru_pengganti"] = value
-        keyboard = [[InlineKeyboardButton(g, callback_data=f"guru_diganti|{g}")] for g in GURU_LIST]
-        await query.edit_message_text("👤 Pilih guru diganti:", reply_markup=InlineKeyboardMarkup(keyboard))
+        # Merah bulat untuk guru diganti
+        keyboard = [[InlineKeyboardButton(f"🔴 {g}", callback_data=f"guru_diganti|{g}")] for g in GURU_LIST]
+        await query.edit_message_text(
+            "👤 Pilih guru diganti:",
+            reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard)
+        )
+
     elif key == "guru_diganti":
         context.user_data["guru_diganti"] = value
         keyboard = [[InlineKeyboardButton(k, callback_data=f"kelas|{k}")] for k in KELAS_LIST]
-        await query.edit_message_text("🏫 Pilih kelas:", reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text(
+            "🏫 Pilih kelas:",
+            reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard)
+        )
+
     elif key == "kelas":
         context.user_data["kelas"] = value
         keyboard = [[InlineKeyboardButton(s, callback_data=f"subjek|{s}")] for s in SUBJEK_LIST]
-        await query.edit_message_text("📚 Pilih subjek:", reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text(
+            "📚 Pilih subjek:",
+            reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard)
+        )
+
     elif key == "subjek":
         context.user_data["subjek"] = value
         context.user_data["images"] = []
         await query.edit_message_text(
-            "📸 Sila hantar **2 gambar** kelas relief.\n\n(1/2)",
-            parse_mode="Markdown"
+            "📸 Sila hantar **2 gambar** kelas relief.",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(base_keyboard)
         )
 
+
 # ==================================================
-# IMAGE HANDLER (Clean + Auto IMAGE + Row Resize)
+# IMAGE HANDLER
 # ==================================================
 async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    photo = update.message.photo[-1]
-    file = await photo.get_file()
-    filename = f"{user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
-    await file.download_to_drive(filename)
-
-    blob = bucket.blob(f"relief/{filename}")
-    blob.upload_from_filename(filename, content_type="image/jpeg")
-
-    # Generate signed URL compatible uniform bucket-level access
-    image_url = blob.generate_signed_url(version="v4", expiration=60*60*24*7, method="GET")
-    os.remove(filename)
-
-    context.user_data.setdefault("images", []).append(image_url)
-    count = len(context.user_data["images"])
-
-    if count < 2:
-        await update.message.reply_text(f"📸 Gambar diterima ({count}/2). Sila hantar satu lagi.")
-        return
-
-    img1, img2 = context.user_data["images"]
-    last_row = len(sheet.get_all_values()) + 1
-
-    # Update data & URL gambar
     try:
+        user = update.effective_user
+        photo = update.message.photo[-1]
+        file = await photo.get_file()
+
+        filename = f"{user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+        await file.download_to_drive(filename)
+
+        blob = bucket.blob(f"relief/{filename}")
+        blob.upload_from_filename(filename, content_type="image/jpeg")
+
+        image_url = blob.generate_signed_url(
+            version="v4",
+            expiration=60 * 60 * 24 * 7,
+            method="GET"
+        )
+
+        os.remove(filename)
+
+        context.user_data.setdefault("images", []).append(image_url)
+        if len(context.user_data["images"]) < 2:
+            return  # Tidak hantar mesej tambahan, tunggu gambar kedua
+
+        img1, img2 = context.user_data["images"]
+        last_row = len(sheet.get_all_values()) + 1
+
+        # Masukkan data & URL gambar
         sheet.update(f"A{last_row}:I{last_row}", [[
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             datetime.now().strftime("%Y-%m-%d"),
@@ -224,33 +263,37 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
             img1,
             img2
         ]])
-    except Exception as e:
-        print("WARNING: update data failed, tapi lanjut:", e)
 
-    # Update formula IMAGE() & auto row height
-    try:
+        # Masukkan formula IMAGE()
         sheet.update(f"J{last_row}", f'=IMAGE(H{last_row})')
         sheet.update(f"K{last_row}", f'=IMAGE(I{last_row})')
-        # Auto resize row height (approx 150px)
-        sheet.format(f"{last_row}:{last_row}", {"rowHeight": 150})
-        # Optional: set column width (J & K)
-        sheet.format("J:K", {"pixelSize": 180})
-    except Exception as e:
-        print("WARNING: IMAGE formula / formatting failed:", e)
 
-    context.user_data.clear()
-    await update.message.reply_text("✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊")
+        context.user_data.clear()
+
+        await update.message.reply_text(
+            "✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊"
+        )
+
+    except Exception as e:
+        print("SYSTEM ERROR:", e)
+        await update.message.reply_text(
+            "⚠️ Rekod diterima tetapi berlaku ralat sistem.\nSila maklumkan pentadbir."
+        )
+
 
 # ==================================================
 # RUN BOT
 # ==================================================
 def main():
     app = ApplicationBuilder().token(TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button))
     app.add_handler(MessageHandler(filters.PHOTO, gambar))
+
     print("🤖 Bot Relief (Firebase) sedang berjalan...")
     app.run_polling()
+
 
 if __name__ == "__main__":
     main()
