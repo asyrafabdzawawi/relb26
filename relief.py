@@ -17,24 +17,27 @@ from telegram.ext import (
     filters
 )
 
-# =========================
+# ======================
 # FIREBASE
-# =========================
+# ======================
 import firebase_admin
 from firebase_admin import credentials, storage
 
-# =========================
+# ======================
 # GOOGLE SHEET
-# =========================
+# ======================
 import gspread
 from google.oauth2.service_account import Credentials
 
+
 # ==================================================
-# ENV VARIABLES
+# CONFIG (ENV VARIABLES)
 # ==================================================
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+
 SHEET_ID = "1bBnCG5ODsqQspRj_-fViRIXJGMo0w7hgbTH6p56gNuM"
 FIREBASE_BUCKET = "relief-31bc6.firebasestorage.app"
+
 
 # ==================================================
 # FIREBASE INIT
@@ -48,6 +51,7 @@ firebase_admin.initialize_app(firebase_creds, {
 })
 
 bucket = storage.bucket()
+
 
 # ==================================================
 # GOOGLE SHEET INIT
@@ -64,6 +68,7 @@ sheet_creds = Credentials.from_service_account_info(
 
 gc = gspread.authorize(sheet_creds)
 sheet = gc.open_by_key(SHEET_ID).sheet1
+
 
 # ==================================================
 # DATA
@@ -126,7 +131,7 @@ KELAS_LIST = [
     "3 Amber", "3 Amethyst", "3 Aquamarine",
     "4 Amber", "4 Amethyst", "4 Aquamarine",
     "5 Amber", "5 Amethyst", "5 Aquamarine",
-    "6 Amber", "6 Amethyst", "6 Aquamarine",
+    "6 Amber", "6 Amethyst", "6 Aquamarine"
 ]
 
 SUBJEK_LIST = [
@@ -135,6 +140,7 @@ SUBJEK_LIST = [
     "RBT", "PJPK", "PSV", "Muzik",
     "Moral", "Pendidikan Islam"
 ]
+
 
 # ==================================================
 # /start
@@ -148,6 +154,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown"
     )
+
 
 # ==================================================
 # CALLBACK FLOW
@@ -182,6 +189,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["subjek"] = value
         await query.edit_message_text("📸 Sila hantar **2 gambar** kelas relief.", parse_mode="Markdown")
 
+
 # ==================================================
 # IMAGE HANDLER
 # ==================================================
@@ -195,10 +203,14 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await file.download_to_drive(filename)
 
         blob = bucket.blob(f"relief/{filename}")
-        blob.upload_from_filename(filename)
-        blob.make_public()
+        blob.upload_from_filename(filename, content_type="image/jpeg")
 
-        image_url = blob.public_url
+        image_url = blob.generate_signed_url(
+            version="v4",
+            expiration=60 * 60 * 24 * 7,
+            method="GET"
+        )
+
         os.remove(filename)
 
         sheet.append_row([
@@ -215,11 +227,11 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     except Exception as e:
-        print("ERROR:", e)
+        print("SYSTEM ERROR:", e)
         await update.message.reply_text(
-            "⚠️ Rekod diterima tetapi berlaku ralat sistem.\n"
-            "Sila maklumkan pentadbir."
+            "⚠️ Rekod diterima tetapi berlaku ralat sistem.\nSila maklumkan pentadbir."
         )
+
 
 # ==================================================
 # RUN BOT
@@ -233,6 +245,7 @@ def main():
 
     print("🤖 Bot Relief (Firebase) sedang berjalan...")
     app.run_polling()
+
 
 if __name__ == "__main__":
     main()
