@@ -172,11 +172,16 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif key == "masa":
         context.user_data["masa"] = value
-        keyboard = [[InlineKeyboardButton(g, callback_data=f"guru|{g}")] for g in GURU_LIST]
+        keyboard = [[InlineKeyboardButton(g, callback_data=f"guru_pengganti|{g}")] for g in GURU_LIST]
         await query.edit_message_text("👨‍🏫 Pilih guru pengganti:", reply_markup=InlineKeyboardMarkup(keyboard))
 
-    elif key == "guru":
-        context.user_data["guru"] = value
+    elif key == "guru_pengganti":
+        context.user_data["guru_pengganti"] = value
+        keyboard = [[InlineKeyboardButton(g, callback_data=f"guru_diganti|{g}")] for g in GURU_LIST]
+        await query.edit_message_text("👤 Pilih guru diganti:", reply_markup=InlineKeyboardMarkup(keyboard))
+
+    elif key == "guru_diganti":
+        context.user_data["guru_diganti"] = value
         keyboard = [[InlineKeyboardButton(k, callback_data=f"kelas|{k}")] for k in KELAS_LIST]
         await query.edit_message_text("🏫 Pilih kelas:", reply_markup=InlineKeyboardMarkup(keyboard))
 
@@ -187,11 +192,15 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif key == "subjek":
         context.user_data["subjek"] = value
-        await query.edit_message_text("📸 Sila hantar **2 gambar** kelas relief.", parse_mode="Markdown")
+        context.user_data["images"] = []
+        await query.edit_message_text(
+            "📸 Sila hantar **2 gambar** kelas relief.\n\n(1/2)",
+            parse_mode="Markdown"
+        )
 
 
 # ==================================================
-# IMAGE HANDLER
+# IMAGE HANDLER (2 GAMBAR → 1 ROW)
 # ==================================================
 async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -213,14 +222,28 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         os.remove(filename)
 
+        context.user_data.setdefault("images", []).append(image_url)
+        count = len(context.user_data["images"])
+
+        if count < 2:
+            await update.message.reply_text(f"📸 Gambar diterima ({count}/2). Sila hantar satu lagi.")
+            return
+
+        img1, img2 = context.user_data["images"]
+
         sheet.append_row([
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # Timestamp
+            datetime.now().strftime("%Y-%m-%d"),          # Tarikh
             context.user_data.get("masa", ""),
-            context.user_data.get("guru", ""),
+            context.user_data.get("guru_pengganti", ""),
+            context.user_data.get("guru_diganti", ""),
             context.user_data.get("kelas", ""),
             context.user_data.get("subjek", ""),
-            image_url
+            img1,
+            img2
         ])
+
+        context.user_data.clear()
 
         await update.message.reply_text(
             "✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊"
