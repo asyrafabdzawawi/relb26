@@ -84,7 +84,7 @@ async def isi_rekod_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("📅 Pilih masa:", reply_markup=InlineKeyboardMarkup(keyboard))
 
 # ==================================================
-# CALLBACK FLOW (pilihan step pakai InlineKeyboard)
+# CALLBACK FLOW (InlineKeyboard)
 # ==================================================
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -135,12 +135,11 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         context.user_data.setdefault("images", []).append(image_url)
         if len(context.user_data["images"]) < 2:
-            return  # Tunggu gambar kedua, tiada mesej tambahan
+            return  # Tunggu gambar kedua
 
         img1, img2 = context.user_data["images"]
         last_row = len(sheet.get_all_values()) + 1
 
-        # Update data & URL gambar
         sheet.update(f"A{last_row}:I{last_row}", [[
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             datetime.now().strftime("%Y-%m-%d"),
@@ -153,7 +152,7 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
             img2
         ]])
 
-        # Update formula IMAGE()
+        # IMAGE formula
         try:
             sheet.update(f"J{last_row}", f'=IMAGE(H{last_row})')
             sheet.update(f"K{last_row}", f'=IMAGE(I{last_row})')
@@ -174,10 +173,10 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ==================================================
 def main():
     app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT("📝 Isi Rekod"), isi_rekod_text))  # Handle ReplyKeyboard
-    app.add_handler(CallbackQueryHandler(button))
-    app.add_handler(MessageHandler(filters.PHOTO, gambar))
+    app.add_handler(CommandHandler("start", start))  # /start
+    app.add_handler(MessageHandler(filters.TEXT("📝 Isi Rekod"), isi_rekod_text))  # ReplyKeyboard
+    app.add_handler(CallbackQueryHandler(button))  # InlineKeyboard
+    app.add_handler(MessageHandler(filters.PHOTO, gambar))  # 2 gambar
     print("🤖 Bot Relief (Firebase) sedang berjalan...")
     app.run_polling()
 
