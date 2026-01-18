@@ -2,7 +2,7 @@ import os
 import json
 from datetime import datetime
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
 
 import firebase_admin
@@ -66,11 +66,27 @@ SUBJEK_LIST = ["Bahasa Melayu", "Bahasa Inggeris", "Bahasa Arab", "Sains", "Seja
 # ==================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
-    keyboard = [[InlineKeyboardButton("📝 Isi Rekod", callback_data="mula")]]
+
+    # Button bawah kotak menaip
+    reply_keyboard = [[KeyboardButton("📝 Isi Rekod")]]
+    reply_markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=False)
+
     await update.message.reply_text(
         "🤖 *Relief Check-In Tracker*\n\nTekan butang di bawah untuk mula.",
-        reply_markup=InlineKeyboardMarkup(keyboard),
+        reply_markup=reply_markup,
         parse_mode="Markdown"
+    )
+
+# ==================================================
+# Handle button bawah kotak menaip
+# ==================================================
+async def isi_rekod_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Sama seperti callback "mula"
+    keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
+    base_keyboard = [[InlineKeyboardButton("📝 Isi Rekod", callback_data="mula")]]
+    await update.message.reply_text(
+        "📅 Pilih masa:",
+        reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard)
     )
 
 # ==================================================
@@ -81,14 +97,9 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     key, *rest = query.data.split("|")
     value = rest[0] if rest else None
-
-    # Base button sentiasa ada
     base_keyboard = [[InlineKeyboardButton("📝 Isi Rekod", callback_data="mula")]]
 
-    if key == "mula":
-        keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
-        await query.edit_message_text("📅 Pilih masa:", reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard))
-    elif key == "masa":
+    if key == "masa":
         context.user_data["masa"] = value
         keyboard = [[InlineKeyboardButton(f"🟢 {g}", callback_data=f"guru_pengganti|{g}")] for g in GURU_LIST]
         await query.edit_message_text("👨‍🏫 Pilih guru pengganti:", reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard))
@@ -132,12 +143,10 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         context.user_data.setdefault("images", []).append(image_url)
         if len(context.user_data["images"]) < 2:
-            return  # Tunggu gambar kedua, tiada mesej tambahan
+            return
 
         img1, img2 = context.user_data["images"]
         last_row = len(sheet.get_all_values()) + 1
-
-        # Update data & URL gambar
         sheet.update(f"A{last_row}:I{last_row}", [[
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             datetime.now().strftime("%Y-%m-%d"),
@@ -150,7 +159,7 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
             img2
         ]])
 
-        # Update formula IMAGE()
+        # Formula IMAGE()
         try:
             sheet.update(f"J{last_row}", f'=IMAGE(H{last_row})')
             sheet.update(f"K{last_row}", f'=IMAGE(I{last_row})')
@@ -172,6 +181,7 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT("📝 Isi Rekod"), isi_rekod_text))
     app.add_handler(CallbackQueryHandler(button))
     app.add_handler(MessageHandler(filters.PHOTO, gambar))
     print("🤖 Bot Relief (Firebase) sedang berjalan...")
