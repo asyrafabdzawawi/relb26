@@ -81,10 +81,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ==================================================
 async def isi_rekod_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
-    base_keyboard = [[InlineKeyboardButton("📝 Isi Rekod", callback_data="mula")]]
     await update.message.reply_text(
         "📅 Pilih masa:",
-        reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard)
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
 # ==================================================
@@ -95,34 +94,29 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     key, *rest = query.data.split("|")
     value = rest[0] if rest else None
-    base_keyboard = [[InlineKeyboardButton("📝 Isi Rekod", callback_data="mula")]]
 
-    if key == "mula":
-        keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
-        await query.edit_message_text("📅 Pilih masa:", reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard))
-    elif key == "masa":
+    if key == "masa":
         context.user_data["masa"] = value
         keyboard = [[InlineKeyboardButton(f"🟢 {g}", callback_data=f"guru_pengganti|{g}")] for g in GURU_LIST]
-        await query.edit_message_text("👨‍🏫 Pilih guru pengganti:", reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard))
+        await query.edit_message_text("👨‍🏫 Pilih guru pengganti:", reply_markup=InlineKeyboardMarkup(keyboard))
     elif key == "guru_pengganti":
         context.user_data["guru_pengganti"] = value
         keyboard = [[InlineKeyboardButton(f"🔴 {g}", callback_data=f"guru_diganti|{g}")] for g in GURU_LIST]
-        await query.edit_message_text("👤 Pilih guru diganti:", reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard))
+        await query.edit_message_text("👤 Pilih guru diganti:", reply_markup=InlineKeyboardMarkup(keyboard))
     elif key == "guru_diganti":
         context.user_data["guru_diganti"] = value
         keyboard = [[InlineKeyboardButton(k, callback_data=f"kelas|{k}")] for k in KELAS_LIST]
-        await query.edit_message_text("🏫 Pilih kelas:", reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard))
+        await query.edit_message_text("🏫 Pilih kelas:", reply_markup=InlineKeyboardMarkup(keyboard))
     elif key == "kelas":
         context.user_data["kelas"] = value
         keyboard = [[InlineKeyboardButton(s, callback_data=f"subjek|{s}")] for s in SUBJEK_LIST]
-        await query.edit_message_text("📚 Pilih subjek:", reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard))
+        await query.edit_message_text("📚 Pilih subjek:", reply_markup=InlineKeyboardMarkup(keyboard))
     elif key == "subjek":
         context.user_data["subjek"] = value
         context.user_data["images"] = []
         await query.edit_message_text(
             "📸 Sila hantar **2 gambar** kelas relief.",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(base_keyboard)
+            parse_mode="Markdown"
         )
 
 # ==================================================
