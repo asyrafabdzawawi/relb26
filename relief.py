@@ -30,7 +30,7 @@ from googleapiclient.http import MediaFileUpload
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 
 SHEET_ID = "1bBnCG5ODsqQspRj_-fViRIXJGMo0w7hgbTH6p56gNuM"
-DRIVE_FOLDER_ID = "1aXDdttdB9WFxzVZdAkP63OgepB2dHKvu"
+DRIVE_FOLDER_ID = "1bBnCG5ODsqQspRj_-fViRIXJGMo0w7hgbTH6p56gNuM"
 
 SCOPES = [
     "https://www.googleapis.com/auth/drive",
