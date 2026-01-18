@@ -1,6 +1,4 @@
 python-telegram-bot==20.7
 gspread
-google-api-python-client
+firebase-admin
 google-auth
-google-auth-oauthlib
-google-auth-httplib2
