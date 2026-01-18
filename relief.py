@@ -29,8 +29,7 @@ from googleapiclient.http import MediaFileUpload
 <<<<<<< HEAD
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 =======
-TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "8294432881:AAFJHuPnXsTJicK8uvlCuu6kXPZCvPd_HOA")
->>>>>>> 16cf669da4d6eda2f3db34b715079dc428459ed6
+
 
 SHEET_ID = "1bBnCG5ODsqQspRj_-fViRIXJGMo0w7hgbTH6p56gNuM"
 DRIVE_FOLDER_ID = "1aXDdttdB9WFxzVZdAkP63OgepB2dHKvu"
@@ -39,9 +38,7 @@ DRIVE_FOLDER_ID = "1aXDdttdB9WFxzVZdAkP63OgepB2dHKvu"
 service_account_info = json.loads(
     os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"]
 
-=======
-SERVICE_ACCOUNT_FILE = "relief-tracker-484613-88c560b30a82.json"
->>>>>>> 16cf669da4d6eda2f3db34b715079dc428459ed6
+
 
 SCOPES = [
     "https://www.googleapis.com/auth/drive",
