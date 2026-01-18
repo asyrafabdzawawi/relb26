@@ -2,7 +2,7 @@ import os
 import json
 from datetime import datetime
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
 
 import firebase_admin
@@ -66,15 +66,17 @@ SUBJEK_LIST = ["Bahasa Melayu", "Bahasa Inggeris", "Bahasa Arab", "Sains", "Seja
 # ==================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
-    keyboard = [[InlineKeyboardButton("📝 Isi Rekod", callback_data="mula")]]
+    # Reply keyboard: Isi Rekod sentiasa bawah kotak menaip
+    keyboard = [[KeyboardButton("📝 Isi Rekod")]]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=False)
     await update.message.reply_text(
         "🤖 *Relief Check-In Tracker*\n\nTekan butang di bawah untuk mula.",
-        reply_markup=InlineKeyboardMarkup(keyboard),
+        reply_markup=reply_markup,
         parse_mode="Markdown"
     )
 
 # ==================================================
-# CALLBACK FLOW
+# CALLBACK FLOW (pilihan step pakai InlineKeyboard)
 # ==================================================
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -82,35 +84,34 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     key, *rest = query.data.split("|")
     value = rest[0] if rest else None
 
-    # Base button sentiasa ada
-    base_keyboard = [[InlineKeyboardButton("📝 Isi Rekod", callback_data="mula")]]
+    # Base inline keyboard untuk step (bawah pilihan) - optional, tidak ganggu ReplyKeyboard
+    base_inline = []
 
     if key == "mula":
         keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
-        await query.edit_message_text("📅 Pilih masa:", reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard))
+        await query.edit_message_text("📅 Pilih masa:", reply_markup=InlineKeyboardMarkup(keyboard + base_inline))
     elif key == "masa":
         context.user_data["masa"] = value
         keyboard = [[InlineKeyboardButton(f"🟢 {g}", callback_data=f"guru_pengganti|{g}")] for g in GURU_LIST]
-        await query.edit_message_text("👨‍🏫 Pilih guru pengganti:", reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard))
+        await query.edit_message_text("👨‍🏫 Pilih guru pengganti:", reply_markup=InlineKeyboardMarkup(keyboard + base_inline))
     elif key == "guru_pengganti":
         context.user_data["guru_pengganti"] = value
         keyboard = [[InlineKeyboardButton(f"🔴 {g}", callback_data=f"guru_diganti|{g}")] for g in GURU_LIST]
-        await query.edit_message_text("👤 Pilih guru diganti:", reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard))
+        await query.edit_message_text("👤 Pilih guru diganti:", reply_markup=InlineKeyboardMarkup(keyboard + base_inline))
     elif key == "guru_diganti":
         context.user_data["guru_diganti"] = value
         keyboard = [[InlineKeyboardButton(k, callback_data=f"kelas|{k}")] for k in KELAS_LIST]
-        await query.edit_message_text("🏫 Pilih kelas:", reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard))
+        await query.edit_message_text("🏫 Pilih kelas:", reply_markup=InlineKeyboardMarkup(keyboard + base_inline))
     elif key == "kelas":
         context.user_data["kelas"] = value
         keyboard = [[InlineKeyboardButton(s, callback_data=f"subjek|{s}")] for s in SUBJEK_LIST]
-        await query.edit_message_text("📚 Pilih subjek:", reply_markup=InlineKeyboardMarkup(keyboard + base_keyboard))
+        await query.edit_message_text("📚 Pilih subjek:", reply_markup=InlineKeyboardMarkup(keyboard + base_inline))
     elif key == "subjek":
         context.user_data["subjek"] = value
         context.user_data["images"] = []
         await query.edit_message_text(
             "📸 Sila hantar **2 gambar** kelas relief.",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(base_keyboard)
+            parse_mode="Markdown"
         )
 
 # ==================================================
@@ -176,7 +177,6 @@ def main():
     app.add_handler(MessageHandler(filters.PHOTO, gambar))
     print("🤖 Bot Relief (Firebase) sedang berjalan...")
     app.run_polling()
-
 
 if __name__ == "__main__":
     main()
