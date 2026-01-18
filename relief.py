@@ -200,7 +200,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ==================================================
-# IMAGE HANDLER (2 GAMBAR → 1 ROW + AUTO IMAGE())
+# IMAGE HANDLER (Uniform Bucket Access Compatible)
 # ==================================================
 async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -214,9 +214,10 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         blob = bucket.blob(f"relief/{filename}")
         blob.upload_from_filename(filename, content_type="image/jpeg")
 
+        # ✅ Generate signed URL compatible uniform bucket access
         image_url = blob.generate_signed_url(
             version="v4",
-            expiration=60 * 60 * 24 * 7,
+            expiration=60 * 60 * 24 * 7,  # 7 hari
             method="GET"
         )
 
@@ -231,13 +232,12 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         img1, img2 = context.user_data["images"]
 
-        # Dapatkan row terakhir +1
         last_row = len(sheet.get_all_values()) + 1
 
-        # Masukkan data + URL gambar
+        # Masukkan data & URL gambar
         sheet.update(f"A{last_row}:I{last_row}", [[
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # Timestamp
-            datetime.now().strftime("%Y-%m-%d"),          # Tarikh
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            datetime.now().strftime("%Y-%m-%d"),
             context.user_data.get("masa", ""),
             context.user_data.get("guru_pengganti", ""),
             context.user_data.get("guru_diganti", ""),
