@@ -15,6 +15,154 @@ from telegram.ext import (
 )
 
 import os
+import json
+from datetime import datetime
+import asyncio
+
+import gspread
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+
+# ======================
+# CONFIG (ENV ONLY)
+# ======================
+
+TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+
+SHEET_ID = "1bBnCG5ODsqQspRj_-fViRIXJGMo0w7hgbTH6p56gNuM"
+DRIVE_FOLDER_ID = "1aXDdttdB9WFxzVZdAkP63OgepB2dHKvu"
+
+service_account_info = json.loads(
+    os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"]
+)
+
+SCOPES = [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/spreadsheets",
+]
+
+# ======================
+# GOOGLE SERVICE ACCOUNT LOGIN
+# ======================
+
+creds = Credentials.from_service_account_info(
+    service_account_info,
+# Proses album (background)
+# ======================
+
+async def process_album_background(messages, context, user):
+    gambar_links = []
+
+    for i, msg in enumerate(messages[:2]):
+        photo = msg.photo[-1]
+        file = await photo.get_file()
+        filename = f"{user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{i}.jpg"
+
+        await file.download_to_drive(filename)
+
+        media = MediaFileUpload(filename, mimetype="image/jpeg", resumable=False)
+        metadata = {"name": filename, "parents": [DRIVE_FOLDER_ID]}
+
+        uploaded = drive_service.files().create(
+            body=metadata,
+            media_body=media,
+            fields="id",
+            supportsAllDrives=True
+        ).execute()
+
+        gambar_links.append(f"https://drive.google.com/file/d/{uploaded['id']}/view")
+        os.remove(filename)
+
+    sheet.append_row([
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        datetime.now().strftime("%d/%m/%Y"),
+        context.user_data.get("masa", ""),
+        context.user_data.get("guru_pengganti", ""),
+        context.user_data.get("guru_diganti", ""),
+        context.user_data.get("kelas", ""),
+        context.user_data.get("subjek", ""),
+        gambar_links[0],
+        gambar_links[1] if len(gambar_links) > 1 else ""
+    ])
+
+async def process_album(group_id, context, user, single_msg=None):
+    if single_msg:
+        messages = [single_msg]
+    else:
+        messages = context.user_data["album_buffer"].pop(group_id, [])
+        context.user_data["album_timer"].pop(group_id, None)
+
+    await user.send_message(
+        "✅ Rekod kelas relief berjaya dihantar.\n"
+        "☺️ Terima kasih atas kerjasama cikgu."
+    )
+
+    asyncio.create_task(process_album_background(messages, context, user))
+
+# ======================
+# Terima gambar
+# ======================
+
+async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    msg = update.message
+    group_id = getattr(msg, "media_group_id", None)
+
+    if group_id:
+        if group_id not in context.user_data["album_buffer"]:
+            context.user_data["album_buffer"][group_id] = []
+            context.user_data["album_timer"][group_id] = asyncio.get_event_loop().call_later(
+                1.5,
+                lambda: asyncio.create_task(process_album(group_id, context, user))
+            )
+        context.user_data["album_buffer"][group_id].append(msg)
+    else:
+        await process_album(None, context, user, single_msg=msg)
+
+# ======================
+# Text button
+# ======================
+
+async def text_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.text == "📝 Isi Rekod":
+        await mula(update, context)
+
+# ======================
+# RUN BOT
+# ======================
+
+def main():
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", mula))
+    app.add_handler(CommandHandler("mula", mula))
+    app.add_handler(CallbackQueryHandler(button))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_button))
+    app.add_handler(MessageHandler(filters.PHOTO, gambar))
+    print("🤖 Bot Relief sedang berjalan...")
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()
+
+On Sun, Jan 18, 2026, 5:09 PM Asyraf Abdullah Zawawi <asyrafabdzawawi@gmail.com> wrote:
+from telegram import (
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    ReplyKeyboardMarkup,
+    KeyboardButton
+)
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    CallbackQueryHandler,
+    MessageHandler,
+    ContextTypes,
+    filters
+)
+
+import os
 from datetime import datetime
 import asyncio
 
