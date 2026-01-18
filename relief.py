@@ -35,16 +35,19 @@ SERVICE_ACCOUNT_INFO = json.loads(
     os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"]
 )
 
+import json
+
 SCOPES = [
     "https://www.googleapis.com/auth/drive",
     "https://www.googleapis.com/auth/spreadsheets"
 ]
 
-# ======================
-# GOOGLE AUTH
-# ======================
+service_account_info = json.loads(
+    os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"]
+)
+
 creds = Credentials.from_service_account_info(
-    SERVICE_ACCOUNT_INFO,
+    service_account_info,
     scopes=SCOPES
 )
 
