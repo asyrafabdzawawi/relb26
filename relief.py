@@ -147,7 +147,7 @@ async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await show_calendar(update, context)
 
 # ==================================================
-# SHOW CALENDAR
+# SHOW CALENDAR (ANTI BUG VERSION)
 # ==================================================
 async def show_calendar(update, context):
 
@@ -188,12 +188,18 @@ async def show_calendar(update, context):
             row.append(InlineKeyboardButton(" ", callback_data="noop"))
         keyboard.append(row)
 
-    if context.user_data.get("last_message_id"):
+    try:
         await update.effective_chat.edit_message_text(
             "🗓 Pilih tarikh rekod:",
             message_id=context.user_data["last_message_id"],
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
+    except:
+        msg = await update.effective_chat.send_message(
+            "🗓 Pilih tarikh rekod:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        context.user_data["last_message_id"] = msg.message_id
 
 # ==================================================
 # CALLBACK FLOW
