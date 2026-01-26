@@ -62,7 +62,7 @@ SUBJEK_LIST = ["Bahasa Melayu", "Bahasa Inggeris", "Bahasa Arab", "Sains", "Seja
                "RBT", "PJPK", "PSV", "Muzik", "Moral", "Pendidikan Islam"]
 
 # ==================================================
-# UTIL TARIKH BM
+# UTIL TARIKH & HARI BM
 # ==================================================
 def format_tarikh_bm(tarikh_iso):
     try:
@@ -71,8 +71,6 @@ def format_tarikh_bm(tarikh_iso):
     except:
         return tarikh_iso
 
-
-# 🔥 TAMBAHAN BARU – DAPATKAN HARI DALAM BM
 def get_hari_bm(tarikh_iso):
     try:
         dt = datetime.strptime(tarikh_iso, "%Y-%m-%d")
@@ -89,7 +87,6 @@ def get_hari_bm(tarikh_iso):
     except:
         return ""
 
-
 # ==================================================
 # /start
 # ==================================================
@@ -102,15 +99,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]]
     reply_markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=False)
 
-   msg = await update.message.reply_text(
-    "🤖 *Relief Check-In Tracker*\n\nPilih tarikh rekod:",
-    reply_markup=reply_markup,
-    parse_mode="Markdown"
+    msg = await update.message.reply_text(
+        "🤖 *Relief Check-In Tracker*\n\nPilih tarikh rekod:",
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
     )
 
-# 🔥 SIMPAN MESSAGE ID UTAMA
-context.user_data["last_message_id"] = msg.message_id
-
+    # 🔥 SIMPAN MESSAGE ID UTAMA
+    context.user_data["last_message_id"] = msg.message_id
 
 # ==================================================
 # HARI INI
@@ -133,7 +129,7 @@ async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["last_message_id"] = msg.message_id
 
 # ==================================================
-# TARIKH LAIN → BUKA KALENDAR
+# TARIKH LAIN → KALENDAR
 # ==================================================
 async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -154,7 +150,6 @@ async def show_calendar(update, context):
 
     year = context.user_data["calendar_year"]
     month = context.user_data["calendar_month"]
-
     today = date.today()
 
     first_day = date(year, month, 1)
@@ -177,14 +172,8 @@ async def show_calendar(update, context):
         row.append(InlineKeyboardButton(" ", callback_data="noop"))
 
     for day in range(1, days_in_month + 1):
-
         tarikh_ini = date(year, month, day)
-
-        if tarikh_ini == today:
-            label = f"🟢{day}"
-        else:
-            label = str(day)
-
+        label = f"🟢{day}" if tarikh_ini == today else str(day)
         row.append(InlineKeyboardButton(label, callback_data=f"cal_day|{year}|{month}|{day}"))
 
         if len(row) == 7:
@@ -196,18 +185,11 @@ async def show_calendar(update, context):
             row.append(InlineKeyboardButton(" ", callback_data="noop"))
         keyboard.append(row)
 
-    if context.user_data.get("last_message_id"):
-        await update.effective_chat.edit_message_text(
-            "🗓 Pilih tarikh rekod:",
-            message_id=context.user_data["last_message_id"],
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-    else:
-        msg = await update.effective_chat.send_message(
-            "🗓 Pilih tarikh rekod:",
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-        context.user_data["last_message_id"] = msg.message_id
+    await update.effective_chat.edit_message_text(
+        "🗓 Pilih tarikh rekod:",
+        message_id=context.user_data["last_message_id"],
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
 # ==================================================
 # CALLBACK FLOW
@@ -215,7 +197,6 @@ async def show_calendar(update, context):
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-
     data = query.data
 
     # ---------- NAV BULAN ----------
@@ -242,9 +223,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         _, year, month, day = data.split("|")
 
         tarikh_obj = date(int(year), int(month), int(day))
-        hari_ini = date.today()
-
-        if tarikh_obj > hari_ini:
+        if tarikh_obj > date.today():
             await query.answer("❌ Tarikh tidak boleh melebihi hari ini", show_alert=True)
             return
 
@@ -269,21 +248,25 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["masa"] = value
         keyboard = [[InlineKeyboardButton(f"🟢 {g}", callback_data=f"guru_pengganti|{g}")] for g in GURU_LIST]
         await query.edit_message_text("👨‍🏫 Pilih guru pengganti:", reply_markup=InlineKeyboardMarkup(keyboard))
+        context.user_data["last_message_id"] = query.message.message_id
 
     elif key == "guru_pengganti":
         context.user_data["guru_pengganti"] = value
         keyboard = [[InlineKeyboardButton(f"🔴 {g}", callback_data=f"guru_diganti|{g}")] for g in GURU_LIST]
         await query.edit_message_text("👤 Pilih guru diganti:", reply_markup=InlineKeyboardMarkup(keyboard))
+        context.user_data["last_message_id"] = query.message.message_id
 
     elif key == "guru_diganti":
         context.user_data["guru_diganti"] = value
         keyboard = [[InlineKeyboardButton(k, callback_data=f"kelas|{k}")] for k in KELAS_LIST]
         await query.edit_message_text("🏫 Pilih kelas:", reply_markup=InlineKeyboardMarkup(keyboard))
+        context.user_data["last_message_id"] = query.message.message_id
 
     elif key == "kelas":
         context.user_data["kelas"] = value
         keyboard = [[InlineKeyboardButton(s, callback_data=f"subjek|{s}")] for s in SUBJEK_LIST]
         await query.edit_message_text("📚 Pilih subjek:", reply_markup=InlineKeyboardMarkup(keyboard))
+        context.user_data["last_message_id"] = query.message.message_id
 
     elif key == "subjek":
         context.user_data["subjek"] = value
@@ -305,8 +288,10 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
 
+        context.user_data["last_message_id"] = query.message.message_id
+
 # ==================================================
-# IMAGE HANDLER (ASAL KEKAL)
+# IMAGE HANDLER
 # ==================================================
 async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -341,20 +326,15 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
             img2
         ]])
 
-        try:
-            sheet.update(f"J{last_row}", f'=IMAGE(H{last_row})')
-            sheet.update(f"K{last_row}", f'=IMAGE(I{last_row})')
-        except Exception as e:
-            print("WARNING IMAGE():", e)
+        sheet.update(f"J{last_row}", f'=IMAGE(H{last_row})')
+        sheet.update(f"K{last_row}", f'=IMAGE(I{last_row})')
 
         context.user_data.clear()
         await update.message.reply_text("✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊")
 
     except Exception as e:
         print("SYSTEM ERROR:", e)
-        await update.message.reply_text(
-            "⚠️ Rekod diterima tetapi berlaku ralat sistem.\nSila maklumkan pentadbir."
-        )
+        await update.message.reply_text("⚠️ Berlaku ralat sistem. Sila maklumkan pentadbir.")
 
 # ==================================================
 # RUN BOT
@@ -365,7 +345,6 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^🟢 Hari Ini$"), hari_ini))
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^📅 Tarikh Lain$"), tarikh_lain))
-
     app.add_handler(CallbackQueryHandler(button))
     app.add_handler(MessageHandler(filters.PHOTO, gambar))
 
