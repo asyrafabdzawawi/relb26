@@ -100,7 +100,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         KeyboardButton("🟢 Hari Ini"),
         KeyboardButton("📅 Tarikh Lain")
     ]]
-    reply_markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=False)
+    reply_markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 
     msg = await update.message.reply_text(
         "🤖 *Relief Check-In Tracker*\n\nPilih tarikh rekod:",
@@ -132,7 +132,7 @@ async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["last_message_id"] = msg.message_id
 
 # ==================================================
-# TARIKH LAIN → KALENDAR (FIXED)
+# TARIKH LAIN → TERUS KALENDAR
 # ==================================================
 async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -147,7 +147,7 @@ async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await show_calendar(update, context)
 
 # ==================================================
-# SHOW CALENDAR (STABIL)
+# SHOW CALENDAR (STABIL PRODUCTION)
 # ==================================================
 async def show_calendar(update, context):
 
@@ -188,25 +188,32 @@ async def show_calendar(update, context):
             row.append(InlineKeyboardButton(" ", callback_data="noop"))
         keyboard.append(row)
 
-    # 🔥 INI FIX UTAMA (GUNA context.bot)
-    await context.bot.edit_message_text(
-        chat_id=update.effective_chat.id,
-        message_id=context.user_data["last_message_id"],
-        text="🗓 Pilih tarikh rekod:",
+    # 🔥 PALING STABIL: TERUS HANTAR MESEJ BARU
+    msg = await update.effective_chat.send_message(
+        "🗓 Pilih tarikh rekod:",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
+    context.user_data["last_message_id"] = msg.message_id
+
 # ==================================================
-# CALLBACK FLOW (KEKAL)
+# CALLBACK FLOW (ASAL KEKAL)
 # ==================================================
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     data = query.data
 
+    # ---------- PILIH HARI ----------
     if data.startswith("cal_day|"):
         _, year, month, day = data.split("|")
-        tarikh_iso = f"{year}-{int(month):02d}-{int(day):02d}"
+
+        tarikh_obj = date(int(year), int(month), int(day))
+        if tarikh_obj > date.today():
+            await query.answer("❌ Tarikh tidak boleh melebihi hari ini", show_alert=True)
+            return
+
+        tarikh_iso = tarikh_obj.strftime("%Y-%m-%d")
         context.user_data["tarikh"] = tarikh_iso
 
         keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
@@ -215,9 +222,9 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown"
         )
-        context.user_data["last_message_id"] = query.message.message_id
         return
 
+    # ---------- FLOW ASAL ----------
     key, *rest = data.split("|")
     value = rest[0] if rest else None
 
@@ -246,9 +253,12 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["images"] = []
 
         tarikh_iso = context.user_data.get("tarikh", "")
+        tarikh_bm = format_tarikh_bm(tarikh_iso)
+        hari_bm = get_hari_bm(tarikh_iso)
+
         await query.edit_message_text(
-            f"📅 *Tarikh Rekod:* {format_tarikh_bm(tarikh_iso)}\n"
-            f"🗓 *Hari:* {get_hari_bm(tarikh_iso)}\n"
+            f"📅 *Tarikh Rekod:* {tarikh_bm}\n"
+            f"🗓 *Hari:* {hari_bm}\n"
             f"⏰ *Masa:* {context.user_data.get('masa','')}\n"
             f"👨‍🏫 *Guru Pengganti:* {context.user_data.get('guru_pengganti','')}\n"
             f"👤 *Guru Diganti:* {context.user_data.get('guru_diganti','')}\n"
@@ -258,20 +268,20 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
 
-        context.user_data["last_message_id"] = query.message.message_id
-
 # ==================================================
-# IMAGE HANDLER (FORMULA BETUL + TAK SCROLL)
+# IMAGE HANDLER (STABIL RAILWAY + FORMULA IMAGE BETUL)
 # ==================================================
 async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
+        user = update.effective_user
         photo = update.message.photo[-1]
         file = await photo.get_file()
-        filename = f"{update.effective_user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+        filename = f"{user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
         await file.download_to_drive(filename)
 
         blob = bucket.blob(f"relief/{filename}")
         blob.upload_from_filename(filename, content_type="image/jpeg")
+
         image_url = blob.generate_signed_url(version="v4", expiration=60*60*24*7, method="GET")
 
         context.user_data.setdefault("images", []).append(image_url)
@@ -281,28 +291,28 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         img1, img2 = context.user_data["images"]
         last_row = len(sheet.get_all_values()) + 1
 
+        # DATA UTAMA
         sheet.update(
-            values=[[datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                     context.user_data.get("tarikh",""),
-                     context.user_data.get("masa",""),
-                     context.user_data.get("guru_pengganti",""),
-                     context.user_data.get("guru_diganti",""),
-                     context.user_data.get("kelas",""),
-                     context.user_data.get("subjek",""),
-                     img1, img2]],
+            values=[[
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                context.user_data.get("tarikh", datetime.now().strftime("%Y-%m-%d")),
+                context.user_data.get("masa", ""),
+                context.user_data.get("guru_pengganti", ""),
+                context.user_data.get("guru_diganti", ""),
+                context.user_data.get("kelas", ""),
+                context.user_data.get("subjek", ""),
+                img1,
+                img2
+            ]],
             range_name=f"A{last_row}:I{last_row}"
         )
 
+        # FORMULA IMAGE COLUMN J & K
         sheet.update(range_name=f"J{last_row}", values=[[f"=IMAGE(H{last_row})"]])
         sheet.update(range_name=f"K{last_row}", values=[[f"=IMAGE(I{last_row})"]])
 
         context.user_data.clear()
-
-        await context.bot.edit_message_text(
-            chat_id=update.effective_chat.id,
-            message_id=context.user_data.get("last_message_id"),
-            text="✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊"
-        )
+        await update.message.reply_text("✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊")
 
         try:
             os.remove(filename)
@@ -311,7 +321,9 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         print("SYSTEM ERROR:", e)
-        await update.message.reply_text("⚠️ Berlaku ralat sistem. Sila maklumkan pentadbir.")
+        await update.message.reply_text(
+            "⚠️ Berlaku ralat semasa proses muat naik.\nSila cuba semula atau maklumkan pentadbir."
+        )
 
 # ==================================================
 # RUN BOT
