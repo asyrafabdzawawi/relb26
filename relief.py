@@ -132,7 +132,7 @@ async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["last_message_id"] = msg.message_id
 
 # ==================================================
-# TARIKH LAIN → KALENDAR
+# TARIKH LAIN → KALENDAR (FIXED)
 # ==================================================
 async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -147,7 +147,7 @@ async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await show_calendar(update, context)
 
 # ==================================================
-# SHOW CALENDAR
+# SHOW CALENDAR (STABIL)
 # ==================================================
 async def show_calendar(update, context):
 
@@ -188,14 +188,16 @@ async def show_calendar(update, context):
             row.append(InlineKeyboardButton(" ", callback_data="noop"))
         keyboard.append(row)
 
-    await update.effective_chat.edit_message_text(
-        "🗓 Pilih tarikh rekod:",
+    # 🔥 INI FIX UTAMA (GUNA context.bot)
+    await context.bot.edit_message_text(
+        chat_id=update.effective_chat.id,
         message_id=context.user_data["last_message_id"],
+        text="🗓 Pilih tarikh rekod:",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
 # ==================================================
-# CALLBACK FLOW (KEKAL STRUKTUR ASAL)
+# CALLBACK FLOW (KEKAL)
 # ==================================================
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -259,7 +261,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["last_message_id"] = query.message.message_id
 
 # ==================================================
-# IMAGE HANDLER (TAK SCROLL + FORMULA BETUL)
+# IMAGE HANDLER (FORMULA BETUL + TAK SCROLL)
 # ==================================================
 async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -291,16 +293,15 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
             range_name=f"A{last_row}:I{last_row}"
         )
 
-        # FORMULA IMAGE DUA COLUMN TERAKHIR
         sheet.update(range_name=f"J{last_row}", values=[[f"=IMAGE(H{last_row})"]])
         sheet.update(range_name=f"K{last_row}", values=[[f"=IMAGE(I{last_row})"]])
 
         context.user_data.clear()
 
-        # 🔥 EDIT MESEJ TERAKHIR (TAK SCROLL)
-        await update.effective_chat.edit_message_text(
-            "✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊",
-            message_id=context.user_data.get("last_message_id")
+        await context.bot.edit_message_text(
+            chat_id=update.effective_chat.id,
+            message_id=context.user_data.get("last_message_id"),
+            text="✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊"
         )
 
         try:
