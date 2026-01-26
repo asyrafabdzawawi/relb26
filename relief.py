@@ -147,7 +147,7 @@ async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await show_calendar(update, context)
 
 # ==================================================
-# SHOW CALENDAR (STABIL PRODUCTION)
+# SHOW CALENDAR (PALING STABIL)
 # ==================================================
 async def show_calendar(update, context):
 
@@ -188,7 +188,6 @@ async def show_calendar(update, context):
             row.append(InlineKeyboardButton(" ", callback_data="noop"))
         keyboard.append(row)
 
-    # 🔥 PALING STABIL: TERUS HANTAR MESEJ BARU
     msg = await update.effective_chat.send_message(
         "🗓 Pilih tarikh rekod:",
         reply_markup=InlineKeyboardMarkup(keyboard)
@@ -269,7 +268,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 # ==================================================
-# IMAGE HANDLER (STABIL RAILWAY + FORMULA IMAGE BETUL)
+# IMAGE HANDLER (STABIL + FORMULA BETUL)
 # ==================================================
 async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -293,6 +292,7 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # DATA UTAMA
         sheet.update(
+            range_name=f"A{last_row}:I{last_row}",
             values=[[
                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 context.user_data.get("tarikh", datetime.now().strftime("%Y-%m-%d")),
@@ -303,13 +303,12 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 context.user_data.get("subjek", ""),
                 img1,
                 img2
-            ]],
-            range_name=f"A{last_row}:I{last_row}"
+            ]]
         )
 
-        # FORMULA IMAGE COLUMN J & K
-        sheet.update(range_name=f"J{last_row}", values=[[f"=IMAGE(H{last_row})"]])
-        sheet.update(range_name=f"K{last_row}", values=[[f"=IMAGE(I{last_row})"]])
+        # FORMULA IMAGE TANPA '
+        sheet.update(range_name=f"J{last_row}", values=[[f"=IMAGE(H{last_row})"]], value_input_option="USER_ENTERED")
+        sheet.update(range_name=f"K{last_row}", values=[[f"=IMAGE(I{last_row})"]], value_input_option="USER_ENTERED")
 
         context.user_data.clear()
         await update.message.reply_text("✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊")
