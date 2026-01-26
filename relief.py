@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import datetime
+from datetime import datetime, date
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
@@ -62,35 +62,95 @@ SUBJEK_LIST = ["Bahasa Melayu", "Bahasa Inggeris", "Bahasa Arab", "Sains", "Seja
                "RBT", "PJPK", "PSV", "Muzik", "Moral", "Pendidikan Islam"]
 
 # ==================================================
+# UTIL TARIKH BM
+# ==================================================
+def format_tarikh_bm(tarikh_iso):
+    try:
+        dt = datetime.strptime(tarikh_iso, "%Y-%m-%d")
+        return dt.strftime("%d/%m/%Y")
+    except:
+        return tarikh_iso
+
+# ==================================================
 # /start
 # ==================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
 
-    reply_keyboard = [[KeyboardButton("📝 Isi Rekod")]]
+    reply_keyboard = [[
+        KeyboardButton("🟢 Hari Ini"),
+        KeyboardButton("📅 Tarikh Lain")
+    ]]
     reply_markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=False)
 
     await update.message.reply_text(
-        "🤖 *Relief Check-In Tracker*\n\nTekan butang di bawah untuk mula.",
+        "🤖 *Relief Check-In Tracker*\n\nPilih tarikh rekod:",
         reply_markup=reply_markup,
         parse_mode="Markdown"
     )
 
 # ==================================================
-# Handle button bawah kotak menaip
+# HARI INI
 # ==================================================
-async def isi_rekod_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    # 🔥 BARU: padam mesej "📝 Isi Rekod" supaya tinggal 1 mesej sahaja
+async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await update.message.delete()
     except:
         pass
 
+    context.user_data["tarikh"] = datetime.now().strftime("%Y-%m-%d")
+
     keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
     await update.effective_chat.send_message(
-        "📅 Pilih masa:",
-        reply_markup=InlineKeyboardMarkup(keyboard)
+        "📅 Tarikh: *Hari Ini*\n\n⏰ Pilih masa:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode="Markdown"
+    )
+
+# ==================================================
+# TARIKH LAIN
+# ==================================================
+async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update.message.delete()
+    except:
+        pass
+
+    context.user_data["tunggu_tarikh"] = True
+
+    await update.message.reply_text(
+        "📅 Sila masukkan tarikh (format: YYYY-MM-DD)\n\nContoh: 2026-01-25"
+    )
+
+# ==================================================
+# TERIMA TARIKH MANUAL
+# ==================================================
+async def terima_tarikh(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.user_data.get("tunggu_tarikh"):
+        return
+
+    tarikh_text = update.message.text.strip()
+
+    try:
+        tarikh_obj = datetime.strptime(tarikh_text, "%Y-%m-%d").date()
+        hari_ini = date.today()
+
+        if tarikh_obj > hari_ini:
+            await update.message.reply_text("❌ Tarikh tidak boleh melebihi hari ini.")
+            return
+
+    except:
+        await update.message.reply_text("❌ Format salah.\nSila guna format: YYYY-MM-DD")
+        return
+
+    context.user_data["tarikh"] = tarikh_text
+    context.user_data["tunggu_tarikh"] = False
+
+    keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
+    await update.message.reply_text(
+        f"📅 Tarikh dipilih: *{format_tarikh_bm(tarikh_text)}*\n\n⏰ Pilih masa:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode="Markdown"
     )
 
 # ==================================================
@@ -125,7 +185,16 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif key == "subjek":
         context.user_data["subjek"] = value
         context.user_data["images"] = []
+
+        tarikh_bm = format_tarikh_bm(context.user_data.get("tarikh", ""))
+
         await query.edit_message_text(
+            f"📅 *Tarikh Rekod:* {tarikh_bm}\n"
+            f"⏰ *Masa:* {context.user_data.get('masa','')}\n"
+            f"👨‍🏫 *Guru Pengganti:* {context.user_data.get('guru_pengganti','')}\n"
+            f"👤 *Guru Diganti:* {context.user_data.get('guru_diganti','')}\n"
+            f"🏫 *Kelas:* {context.user_data.get('kelas','')}\n"
+            f"📚 *Subjek:* {context.user_data.get('subjek','')}\n\n"
             "📸 Sila hantar **2 gambar** kelas relief.",
             parse_mode="Markdown"
         )
@@ -153,9 +222,10 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         img1, img2 = context.user_data["images"]
         last_row = len(sheet.get_all_values()) + 1
+
         sheet.update(f"A{last_row}:I{last_row}", [[
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            datetime.now().strftime("%Y-%m-%d"),
+            context.user_data.get("tarikh", datetime.now().strftime("%Y-%m-%d")),
             context.user_data.get("masa", ""),
             context.user_data.get("guru_pengganti", ""),
             context.user_data.get("guru_diganti", ""),
@@ -165,12 +235,11 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
             img2
         ]])
 
-        # Formula IMAGE()
         try:
             sheet.update(f"J{last_row}", f'=IMAGE(H{last_row})')
             sheet.update(f"K{last_row}", f'=IMAGE(I{last_row})')
         except Exception as e:
-            print("WARNING: formula IMAGE() failed, tapi data sudah masuk", e)
+            print("WARNING IMAGE():", e)
 
         context.user_data.clear()
         await update.message.reply_text("✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊")
@@ -186,13 +255,17 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ==================================================
 def main():
     app = ApplicationBuilder().token(TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^📝 Isi Rekod$"), isi_rekod_text))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^🟢 Hari Ini$"), hari_ini))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^📅 Tarikh Lain$"), tarikh_lain))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, terima_tarikh))
+
     app.add_handler(CallbackQueryHandler(button))
     app.add_handler(MessageHandler(filters.PHOTO, gambar))
+
     print("🤖 Bot Relief (Firebase) sedang berjalan...")
     app.run_polling()
-
 
 if __name__ == "__main__":
     main()
