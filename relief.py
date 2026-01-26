@@ -102,11 +102,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]]
     reply_markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=False)
 
-    await update.message.reply_text(
-        "🤖 *Relief Check-In Tracker*\n\nPilih tarikh rekod:",
-        reply_markup=reply_markup,
-        parse_mode="Markdown"
+   msg = await update.message.reply_text(
+    "🤖 *Relief Check-In Tracker*\n\nPilih tarikh rekod:",
+    reply_markup=reply_markup,
+    parse_mode="Markdown"
     )
+
+# 🔥 SIMPAN MESSAGE ID UTAMA
+context.user_data["last_message_id"] = msg.message_id
+
 
 # ==================================================
 # HARI INI
