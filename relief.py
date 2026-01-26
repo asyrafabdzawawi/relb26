@@ -141,10 +141,9 @@ async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["calendar_year"] = today.year
     context.user_data["calendar_month"] = today.month
 
-    msg = await update.effective_chat.send_message("🗓 Pilih tarikh rekod:")
-    context.user_data["last_message_id"] = msg.message_id
-
+    # 🔥 TERUS PAPAR KALENDAR TANPA KELUAR TEKS DULU
     await show_calendar(update, context)
+
 
 # ==================================================
 # SHOW CALENDAR (ANTI BUG VERSION)
