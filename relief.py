@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
@@ -108,7 +108,7 @@ async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # ==================================================
-# TARIKH LAIN
+# TARIKH LAIN → BUKA KALENDAR
 # ==================================================
 async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -116,41 +116,53 @@ async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except:
         pass
 
-    context.user_data["tunggu_tarikh"] = True
+    today = date.today()
+    context.user_data["calendar_year"] = today.year
+    context.user_data["calendar_month"] = today.month
 
-    await update.message.reply_text(
-        "📅 Sila masukkan tarikh (format: YYYY-MM-DD)\n\nContoh: 2026-01-25"
-    )
+    await show_calendar(update, context)
 
 # ==================================================
-# TERIMA TARIKH MANUAL
+# SHOW CALENDAR
 # ==================================================
-async def terima_tarikh(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.user_data.get("tunggu_tarikh"):
-        return
+async def show_calendar(update, context):
 
-    tarikh_text = update.message.text.strip()
+    year = context.user_data["calendar_year"]
+    month = context.user_data["calendar_month"]
 
-    try:
-        tarikh_obj = datetime.strptime(tarikh_text, "%Y-%m-%d").date()
-        hari_ini = date.today()
+    first_day = date(year, month, 1)
+    start_weekday = first_day.weekday()
+    days_in_month = (date(year + (month // 12), ((month % 12) + 1), 1) - timedelta(days=1)).day
 
-        if tarikh_obj > hari_ini:
-            await update.message.reply_text("❌ Tarikh tidak boleh melebihi hari ini.")
-            return
+    keyboard = []
 
-    except:
-        await update.message.reply_text("❌ Format salah.\nSila guna format: YYYY-MM-DD")
-        return
+    keyboard.append([
+        InlineKeyboardButton("⬅️", callback_data=f"cal_nav|{year}|{month-1}"),
+        InlineKeyboardButton(f"{first_day.strftime('%B')} {year}", callback_data="noop"),
+        InlineKeyboardButton("➡️", callback_data=f"cal_nav|{year}|{month+1}")
+    ])
 
-    context.user_data["tarikh"] = tarikh_text
-    context.user_data["tunggu_tarikh"] = False
+    weekdays = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+    keyboard.append([InlineKeyboardButton(d, callback_data="noop") for d in weekdays])
 
-    keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
-    await update.message.reply_text(
-        f"📅 Tarikh dipilih: *{format_tarikh_bm(tarikh_text)}*\n\n⏰ Pilih masa:",
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode="Markdown"
+    row = []
+    for _ in range(start_weekday):
+        row.append(InlineKeyboardButton(" ", callback_data="noop"))
+
+    for day in range(1, days_in_month + 1):
+        row.append(InlineKeyboardButton(str(day), callback_data=f"cal_day|{year}|{month}|{day}"))
+        if len(row) == 7:
+            keyboard.append(row)
+            row = []
+
+    if row:
+        while len(row) < 7:
+            row.append(InlineKeyboardButton(" ", callback_data="noop"))
+        keyboard.append(row)
+
+    await update.effective_chat.send_message(
+        "🗓 Pilih tarikh rekod:",
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
 # ==================================================
@@ -159,7 +171,52 @@ async def terima_tarikh(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    key, *rest = query.data.split("|")
+
+    data = query.data
+
+    # ---------- NAV BULAN ----------
+    if data.startswith("cal_nav|"):
+        _, year, month = data.split("|")
+        year = int(year)
+        month = int(month)
+
+        if month == 0:
+            month = 12
+            year -= 1
+        elif month == 13:
+            month = 1
+            year += 1
+
+        context.user_data["calendar_year"] = year
+        context.user_data["calendar_month"] = month
+
+        await show_calendar(query, context)
+        return
+
+    # ---------- PILIH HARI ----------
+    if data.startswith("cal_day|"):
+        _, year, month, day = data.split("|")
+
+        tarikh_obj = date(int(year), int(month), int(day))
+        hari_ini = date.today()
+
+        if tarikh_obj > hari_ini:
+            await query.answer("❌ Tarikh tidak boleh melebihi hari ini", show_alert=True)
+            return
+
+        tarikh_iso = tarikh_obj.strftime("%Y-%m-%d")
+        context.user_data["tarikh"] = tarikh_iso
+
+        keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
+        await query.edit_message_text(
+            f"📅 Tarikh dipilih: *{format_tarikh_bm(tarikh_iso)}*\n\n⏰ Pilih masa:",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode="Markdown"
+        )
+        return
+
+    # ---------- FLOW ASAL ----------
+    key, *rest = data.split("|")
     value = rest[0] if rest else None
 
     if key == "masa":
@@ -200,7 +257,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 # ==================================================
-# IMAGE HANDLER
+# IMAGE HANDLER (KEKAL ASAL)
 # ==================================================
 async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -259,7 +316,6 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^🟢 Hari Ini$"), hari_ini))
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^📅 Tarikh Lain$"), tarikh_lain))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, terima_tarikh))
 
     app.add_handler(CallbackQueryHandler(button))
     app.add_handler(MessageHandler(filters.PHOTO, gambar))
