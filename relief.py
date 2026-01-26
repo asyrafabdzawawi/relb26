@@ -80,8 +80,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Handle button bawah kotak menaip
 # ==================================================
 async def isi_rekod_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    # 🔥 BARU: padam mesej "📝 Isi Rekod" supaya tinggal 1 mesej sahaja
+    try:
+        await update.message.delete()
+    except:
+        pass
+
     keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
-    await update.message.reply_text(
+    await update.effective_chat.send_message(
         "📅 Pilih masa:",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
@@ -99,18 +106,22 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["masa"] = value
         keyboard = [[InlineKeyboardButton(f"🟢 {g}", callback_data=f"guru_pengganti|{g}")] for g in GURU_LIST]
         await query.edit_message_text("👨‍🏫 Pilih guru pengganti:", reply_markup=InlineKeyboardMarkup(keyboard))
+
     elif key == "guru_pengganti":
         context.user_data["guru_pengganti"] = value
         keyboard = [[InlineKeyboardButton(f"🔴 {g}", callback_data=f"guru_diganti|{g}")] for g in GURU_LIST]
         await query.edit_message_text("👤 Pilih guru diganti:", reply_markup=InlineKeyboardMarkup(keyboard))
+
     elif key == "guru_diganti":
         context.user_data["guru_diganti"] = value
         keyboard = [[InlineKeyboardButton(k, callback_data=f"kelas|{k}")] for k in KELAS_LIST]
         await query.edit_message_text("🏫 Pilih kelas:", reply_markup=InlineKeyboardMarkup(keyboard))
+
     elif key == "kelas":
         context.user_data["kelas"] = value
         keyboard = [[InlineKeyboardButton(s, callback_data=f"subjek|{s}")] for s in SUBJEK_LIST]
         await query.edit_message_text("📚 Pilih subjek:", reply_markup=InlineKeyboardMarkup(keyboard))
+
     elif key == "subjek":
         context.user_data["subjek"] = value
         context.user_data["images"] = []
