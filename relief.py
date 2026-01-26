@@ -72,7 +72,7 @@ def format_tarikh_bm(tarikh_iso):
         return tarikh_iso
 
 # ==================================================
-# /start
+# /start  (SIMPAN MESSAGE ID DARI AWAL 🔥)
 # ==================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
@@ -83,14 +83,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]]
     reply_markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=False)
 
-    await update.message.reply_text(
+    msg = await update.message.reply_text(
         "🤖 *Relief Check-In Tracker*\n\nPilih tarikh rekod:",
         reply_markup=reply_markup,
         parse_mode="Markdown"
     )
 
+    # 🔥 simpan message id utama
+    context.user_data["last_message_id"] = msg.message_id
+
 # ==================================================
-# HARI INI
+# HARI INI  (EDIT MESEJ ASAL – NO SCROLL 🔥)
 # ==================================================
 async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -101,16 +104,16 @@ async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["tarikh"] = datetime.now().strftime("%Y-%m-%d")
 
     keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
-    msg = await update.effective_chat.send_message(
+
+    await update.effective_chat.edit_message_text(
         "📅 Tarikh: *Hari Ini*\n\n⏰ Pilih masa:",
+        message_id=context.user_data["last_message_id"],
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown"
     )
 
-    context.user_data["last_message_id"] = msg.message_id
-
 # ==================================================
-# TARIKH LAIN → BUKA KALENDAR
+# TARIKH LAIN → BUKA KALENDAR (EDIT MESEJ ASAL)
 # ==================================================
 async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -125,7 +128,7 @@ async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await show_calendar(update, context)
 
 # ==================================================
-# SHOW CALENDAR (HIGHLIGHT HARI INI + NO SCROLL)
+# SHOW CALENDAR (HIGHLIGHT HARI INI + NO SCROLL 🔥)
 # ==================================================
 async def show_calendar(update, context):
 
@@ -174,21 +177,14 @@ async def show_calendar(update, context):
             row.append(InlineKeyboardButton(" ", callback_data="noop"))
         keyboard.append(row)
 
-    if context.user_data.get("last_message_id"):
-        await update.effective_chat.edit_message_text(
-            "🗓 Pilih tarikh rekod:",
-            message_id=context.user_data["last_message_id"],
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-    else:
-        msg = await update.effective_chat.send_message(
-            "🗓 Pilih tarikh rekod:",
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-        context.user_data["last_message_id"] = msg.message_id
+    await update.effective_chat.edit_message_text(
+        "🗓 Pilih tarikh rekod:",
+        message_id=context.user_data["last_message_id"],
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
 # ==================================================
-# CALLBACK FLOW
+# CALLBACK FLOW (ASAL KEKAL 100%)
 # ==================================================
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -239,7 +235,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["last_message_id"] = query.message.message_id
         return
 
-    # ---------- FLOW ASAL (KEKAL 100%) ----------
+    # ---------- FLOW ASAL ----------
     key, *rest = data.split("|")
     value = rest[0] if rest else None
 
