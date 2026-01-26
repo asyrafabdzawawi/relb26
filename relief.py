@@ -41,18 +41,21 @@ sheet = gc.open_by_key(SHEET_ID).sheet1
 MASA_LIST = ["7.45–8.15", "8.15–8.45", "8.45–9.15", "9.15–9.45", "9.45–10.15",
              "10.15–10.45", "10.45–11.15", "11.15–11.45", "11.45–12.15", "12.15–12.45", "12.45–1.15"]
 
-GURU_LIST = ["Mohd Faizal Bin Ahmad", "Shahairi Bin Suratman", "Mohd Khairul Nizam Bin Hazari", 
-             "Wan Nurhaslinda Binti Wan Mazuki", "Abdul Ghani Bin Abdul Karim", "Abu Bakar Bin Sahari",
-             "Azizul Rahim Bin Ismail", "Azlinawati Binti Yaakob", "Azura Binti Mohamad", "Basirah Binti Bacharudin",
-             "Chithrra A/P Damodharan", "Endhumathy A/P Veeraiah", "Fadzilah Binti Jahaya", "Faridah Binti Muda",
-             "Masita Binti Ismail", "Mazura Binti Abdul Aziz", "Mohd Asri Bin Isma'ail", "Mohd Huzaini Bin Husin",
-             "Mohd Noor Safwan Bin Md Noor", "Muhammad Asyraf Bin Abdullah Zawawi", "Muhammad Yusuf Bin Zainol Abidin",
-             "Noor Aizah Binti Ilias", "Noor Azlin Binti Teh", "Noor Azlinda Binti Abdullah", "Noor Jareena Binti Mohamud Kassim",
-             "Normasita Bt Elias", "Norul Fazlin Binti Zainal Karib", "Nur Imanina Binti Shaari", "Nurul Asyiqin Binti Osman",
-             "Nurulzahilah Binti Ibrahim", "Puoneswari A/P Sundarajoo", "Roslan Bin Mohd Yusoff", "Rusmaliza Binti Abdul Rahman",
-             "Siti Rohayu Binti Zakaria", "Siti Munirah Binti Munadzir", "Suria Binti Ismail", "Umamageswari A/P Muniandy",
-             "Uzma Farzana Binti Ridzuan", "Wan Nur Aqielah Binti Wan Shahar", "Za'aimah Binti Shakir", "Zarina Binti Mohamad",
-             "Zuraini Binti Hassan"]
+GURU_LIST = [
+    "Mohd Faizal Bin Ahmad", "Shahairi Bin Suratman", "Mohd Khairul Nizam Bin Hazari",
+    "Wan Nurhaslinda Binti Wan Mazuki", "Abdul Ghani Bin Abdul Karim", "Abu Bakar Bin Sahari",
+    "Azizul Rahim Bin Ismail", "Azlinawati Binti Yaakob", "Azura Binti Mohamad", "Basirah Binti Bacharudin",
+    "Chithrra A/P Damodharan", "Endhumathy A/P Veeraiah", "Fadzilah Binti Jahaya", "Faridah Binti Muda",
+    "Masita Binti Ismail", "Mazura Binti Abdul Aziz", "Mohd Asri Bin Isma'ail", "Mohd Huzaini Bin Husin",
+    "Mohd Noor Safwan Bin Md Noor", "Muhammad Asyraf Bin Abdullah Zawawi", "Muhammad Yusuf Bin Zainol Abidin",
+    "Noor Aizah Binti Ilias", "Noor Azlin Binti Teh", "Noor Azlinda Binti Abdullah",
+    "Noor Jareena Binti Mohamud Kassim", "Normasita Bt Elias", "Norul Fazlin Binti Zainal Karib",
+    "Nur Imanina Binti Shaari", "Nurul Asyiqin Binti Osman", "Nurulzahilah Binti Ibrahim",
+    "Puoneswari A/P Sundarajoo", "Roslan Bin Mohd Yusoff", "Rusmaliza Binti Abdul Rahman",
+    "Siti Rohayu Binti Zakaria", "Siti Munirah Binti Munadzir", "Suria Binti Ismail",
+    "Umamageswari A/P Muniandy", "Uzma Farzana Binti Ridzuan", "Wan Nur Aqielah Binti Wan Shahar",
+    "Za'aimah Binti Shakir", "Zarina Binti Mohamad", "Zuraini Binti Hassan"
+]
 
 KELAS_LIST = ["1 Amber", "1 Amethyst", "1 Aquamarine", "2 Amber", "2 Amethyst", "2 Aquamarine",
               "3 Amber", "3 Amethyst", "3 Aquamarine", "4 Amber", "4 Amethyst", "4 Aquamarine",
@@ -141,12 +144,10 @@ async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["calendar_year"] = today.year
     context.user_data["calendar_month"] = today.month
 
-    # 🔥 TERUS PAPAR KALENDAR TANPA KELUAR TEKS DULU
     await show_calendar(update, context)
 
-
 # ==================================================
-# SHOW CALENDAR (ANTI BUG VERSION)
+# SHOW CALENDAR
 # ==================================================
 async def show_calendar(update, context):
 
@@ -201,31 +202,12 @@ async def show_calendar(update, context):
         context.user_data["last_message_id"] = msg.message_id
 
 # ==================================================
-# CALLBACK FLOW
+# CALLBACK FLOW (ASAL KEKAL)
 # ==================================================
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     data = query.data
-
-    # ---------- NAV BULAN ----------
-    if data.startswith("cal_nav|"):
-        _, year, month = data.split("|")
-        year = int(year)
-        month = int(month)
-
-        if month == 0:
-            month = 12
-            year -= 1
-        elif month == 13:
-            month = 1
-            year += 1
-
-        context.user_data["calendar_year"] = year
-        context.user_data["calendar_month"] = month
-
-        await show_calendar(query, context)
-        return
 
     # ---------- PILIH HARI ----------
     if data.startswith("cal_day|"):
@@ -245,8 +227,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown"
         )
-
-        context.user_data["last_message_id"] = query.message.message_id
         return
 
     # ---------- FLOW ASAL ----------
@@ -257,25 +237,21 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["masa"] = value
         keyboard = [[InlineKeyboardButton(f"🟢 {g}", callback_data=f"guru_pengganti|{g}")] for g in GURU_LIST]
         await query.edit_message_text("👨‍🏫 Pilih guru pengganti:", reply_markup=InlineKeyboardMarkup(keyboard))
-        context.user_data["last_message_id"] = query.message.message_id
 
     elif key == "guru_pengganti":
         context.user_data["guru_pengganti"] = value
         keyboard = [[InlineKeyboardButton(f"🔴 {g}", callback_data=f"guru_diganti|{g}")] for g in GURU_LIST]
         await query.edit_message_text("👤 Pilih guru diganti:", reply_markup=InlineKeyboardMarkup(keyboard))
-        context.user_data["last_message_id"] = query.message.message_id
 
     elif key == "guru_diganti":
         context.user_data["guru_diganti"] = value
         keyboard = [[InlineKeyboardButton(k, callback_data=f"kelas|{k}")] for k in KELAS_LIST]
         await query.edit_message_text("🏫 Pilih kelas:", reply_markup=InlineKeyboardMarkup(keyboard))
-        context.user_data["last_message_id"] = query.message.message_id
 
     elif key == "kelas":
         context.user_data["kelas"] = value
         keyboard = [[InlineKeyboardButton(s, callback_data=f"subjek|{s}")] for s in SUBJEK_LIST]
         await query.edit_message_text("📚 Pilih subjek:", reply_markup=InlineKeyboardMarkup(keyboard))
-        context.user_data["last_message_id"] = query.message.message_id
 
     elif key == "subjek":
         context.user_data["subjek"] = value
@@ -297,10 +273,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
 
-        context.user_data["last_message_id"] = query.message.message_id
-
 # ==================================================
-# IMAGE HANDLER
+# IMAGE HANDLER (STABIL RAILWAY)
 # ==================================================
 async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -314,7 +288,6 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         blob.upload_from_filename(filename, content_type="image/jpeg")
 
         image_url = blob.generate_signed_url(version="v4", expiration=60*60*24*7, method="GET")
-        os.remove(filename)
 
         context.user_data.setdefault("images", []).append(image_url)
         if len(context.user_data["images"]) < 2:
@@ -323,27 +296,43 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         img1, img2 = context.user_data["images"]
         last_row = len(sheet.get_all_values()) + 1
 
-        sheet.update(f"A{last_row}:I{last_row}", [[
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            context.user_data.get("tarikh", datetime.now().strftime("%Y-%m-%d")),
-            context.user_data.get("masa", ""),
-            context.user_data.get("guru_pengganti", ""),
-            context.user_data.get("guru_diganti", ""),
-            context.user_data.get("kelas", ""),
-            context.user_data.get("subjek", ""),
-            img1,
-            img2
-        ]])
+        # 🔥 FORMAT UPDATE BETUL (VALUES DULU, RANGE KEMUDIAN)
+        sheet.update(
+            values=[[
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                context.user_data.get("tarikh", datetime.now().strftime("%Y-%m-%d")),
+                context.user_data.get("masa", ""),
+                context.user_data.get("guru_pengganti", ""),
+                context.user_data.get("guru_diganti", ""),
+                context.user_data.get("kelas", ""),
+                context.user_data.get("subjek", ""),
+                img1,
+                img2
+            ]],
+            range_name=f"A{last_row}:I{last_row}"
+        )
 
-        sheet.update(f"J{last_row}", f'=IMAGE(H{last_row})')
-        sheet.update(f"K{last_row}", f'=IMAGE(I{last_row})')
-
+        # 🟢 MAKLUM BERJAYA DULU
         context.user_data.clear()
         await update.message.reply_text("✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊")
 
+        # FORMULA IMAGE (OPTIONAL)
+        try:
+            sheet.update(range_name=f"J{last_row}", values=[[f"=IMAGE(H{last_row})"]])
+            sheet.update(range_name=f"K{last_row}", values=[[f"=IMAGE(I{last_row})"]])
+        except Exception as e:
+            print("WARNING IMAGE():", e)
+
+        try:
+            os.remove(filename)
+        except:
+            pass
+
     except Exception as e:
         print("SYSTEM ERROR:", e)
-        await update.message.reply_text("⚠️ Berlaku ralat sistem. Sila maklumkan pentadbir.")
+        await update.message.reply_text(
+            "⚠️ Berlaku ralat semasa proses muat naik.\nSila cuba semula atau maklumkan pentadbir."
+        )
 
 # ==================================================
 # RUN BOT
