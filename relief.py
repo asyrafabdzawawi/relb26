@@ -75,14 +75,15 @@ SUBJEK_LIST = ["Bahasa Melayu","Bahasa Inggeris","Bahasa Arab","Sains","Sejarah"
 
 
 # ==================================================
-# 🔥 ULTRA HELPER — GRID KEYBOARD
+# 🔥 GRID KEYBOARD (ANTI-SCROLL)
 # ==================================================
-def build_grid_keyboard(items, callback_prefix, cols=2, emoji=""):
-    keyboard, row = [], []
+def grid_keyboard(items, callback, cols=2, emoji=""):
+    keyboard = []
+    row = []
 
     for item in items:
-        label = f"{emoji} {item}" if emoji else item
-        row.append(InlineKeyboardButton(label, callback_data=f"{callback_prefix}|{item}"))
+        text = f"{emoji} {item}" if emoji else item
+        row.append(InlineKeyboardButton(text, callback_data=f"{callback}|{item}"))
 
         if len(row) == cols:
             keyboard.append(row)
@@ -95,30 +96,31 @@ def build_grid_keyboard(items, callback_prefix, cols=2, emoji=""):
 
 
 # ==================================================
-# UTIL DELETE MESSAGE
+# UTIL TARIKH
 # ==================================================
-async def delete_last_message(context, chat_id):
+def format_tarikh_bm(tarikh_iso):
     try:
-        last_id = context.user_data.get("last_message_id")
-        if last_id:
-            await context.bot.delete_message(chat_id, last_id)
+        dt = datetime.strptime(tarikh_iso, "%Y-%m-%d")
+        return dt.strftime("%d/%m/%Y")
     except:
-        pass
+        return tarikh_iso
 
 
-async def send_menu(update_or_query, context, text, keyboard, parse="Markdown"):
-    chat_id = update_or_query.effective_chat.id
-
-    await delete_last_message(context, chat_id)
-
-    msg = await context.bot.send_message(
-        chat_id=chat_id,
-        text=text,
-        reply_markup=keyboard,
-        parse_mode=parse
-    )
-
-    context.user_data["last_message_id"] = msg.message_id
+def get_hari_bm(tarikh_iso):
+    try:
+        dt = datetime.strptime(tarikh_iso, "%Y-%m-%d")
+        hari_map = {
+            "Monday": "Isnin",
+            "Tuesday": "Selasa",
+            "Wednesday": "Rabu",
+            "Thursday": "Khamis",
+            "Friday": "Jumaat",
+            "Saturday": "Sabtu",
+            "Sunday": "Ahad"
+        }
+        return hari_map.get(dt.strftime("%A"), dt.strftime("%A"))
+    except:
+        return ""
 
 
 # ==================================================
@@ -143,22 +145,33 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # HARI INI
 # ==================================================
 async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update.message.delete()
+    except:
+        pass
+
     context.user_data["tarikh"] = datetime.now().strftime("%Y-%m-%d")
 
-    keyboard = build_grid_keyboard(MASA_LIST, "masa", cols=2)
+    keyboard = grid_keyboard(MASA_LIST, "masa", cols=2)
 
-    await send_menu(
-        update,
-        context,
+    msg = await update.effective_chat.send_message(
         "📅 Tarikh: *Hari Ini*\n\n⏰ Pilih masa:",
-        keyboard
+        reply_markup=keyboard,
+        parse_mode="Markdown"
     )
+
+    context.user_data["last_message_id"] = msg.message_id
 
 
 # ==================================================
 # TARIKH LAIN
 # ==================================================
 async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update.message.delete()
+    except:
+        pass
+
     today = date.today()
     context.user_data["calendar_year"] = today.year
     context.user_data["calendar_month"] = today.month
@@ -167,7 +180,7 @@ async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ==================================================
-# CALENDAR
+# SHOW CALENDAR
 # ==================================================
 async def show_calendar(update, context):
 
@@ -209,7 +222,12 @@ async def show_calendar(update, context):
             row.append(InlineKeyboardButton(" ", callback_data="noop"))
         keyboard.append(row)
 
-    await send_menu(update, context, "🗓 Pilih tarikh rekod:", InlineKeyboardMarkup(keyboard), parse=None)
+    msg = await update.effective_chat.send_message(
+        "🗓 Pilih tarikh rekod:",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+    context.user_data["last_message_id"] = msg.message_id
 
 
 # ==================================================
@@ -218,109 +236,147 @@ async def show_calendar(update, context):
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-
     data = query.data
+
+    if data.startswith("cal_day|"):
+        _, year, month, day = data.split("|")
+
+        tarikh_obj = date(int(year), int(month), int(day))
+        if tarikh_obj > date.today():
+            await query.answer("❌ Tarikh tidak boleh melebihi hari ini", show_alert=True)
+            return
+
+        tarikh_iso = tarikh_obj.strftime("%Y-%m-%d")
+        context.user_data["tarikh"] = tarikh_iso
+
+        keyboard = grid_keyboard(MASA_LIST, "masa", cols=2)
+
+        await query.edit_message_text(
+            f"📅 Tarikh dipilih: *{format_tarikh_bm(tarikh_iso)}*\n\n⏰ Pilih masa:",
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+        return
+
     key, *rest = data.split("|")
     value = rest[0] if rest else None
 
     if key == "masa":
         context.user_data["masa"] = value
-        keyboard = build_grid_keyboard(GURU_LIST, "guru_pengganti", cols=3, emoji="🟢")
-        await send_menu(query, context, "👨‍🏫 Pilih guru pengganti:", keyboard)
+        keyboard = grid_keyboard(GURU_LIST, "guru_pengganti", cols=3, emoji="🟢")
+        await query.edit_message_text("👨‍🏫 Pilih guru pengganti:", reply_markup=keyboard)
 
     elif key == "guru_pengganti":
         context.user_data["guru_pengganti"] = value
-        keyboard = build_grid_keyboard(GURU_LIST, "guru_diganti", cols=3, emoji="🔴")
-        await send_menu(query, context, "👤 Pilih guru diganti:", keyboard)
+        keyboard = grid_keyboard(GURU_LIST, "guru_diganti", cols=3, emoji="🔴")
+        await query.edit_message_text("👤 Pilih guru diganti:", reply_markup=keyboard)
 
     elif key == "guru_diganti":
         context.user_data["guru_diganti"] = value
-        keyboard = build_grid_keyboard(KELAS_LIST, "kelas", cols=3)
-        await send_menu(query, context, "🏫 Pilih kelas:", keyboard)
+        keyboard = grid_keyboard(KELAS_LIST, "kelas", cols=3)
+        await query.edit_message_text("🏫 Pilih kelas:", reply_markup=keyboard)
 
     elif key == "kelas":
         context.user_data["kelas"] = value
-        keyboard = build_grid_keyboard(SUBJEK_LIST, "subjek", cols=2)
-        await send_menu(query, context, "📚 Pilih subjek:", keyboard)
+        keyboard = grid_keyboard(SUBJEK_LIST, "subjek", cols=2)
+        await query.edit_message_text("📚 Pilih subjek:", reply_markup=keyboard)
 
     elif key == "subjek":
-
         context.user_data["subjek"] = value
         context.user_data["images"] = []
 
-        text = (
-            f"📅 *Tarikh:* {context.user_data.get('tarikh','')}\n"
+        tarikh_iso = context.user_data.get("tarikh", "")
+        tarikh_bm = format_tarikh_bm(tarikh_iso)
+        hari_bm = get_hari_bm(tarikh_iso)
+
+        await query.edit_message_text(
+            f"📅 *Tarikh Rekod:* {tarikh_bm}\n"
+            f"🗓 *Hari:* {hari_bm}\n"
             f"⏰ *Masa:* {context.user_data.get('masa','')}\n"
             f"👨‍🏫 *Guru Pengganti:* {context.user_data.get('guru_pengganti','')}\n"
             f"👤 *Guru Diganti:* {context.user_data.get('guru_diganti','')}\n"
             f"🏫 *Kelas:* {context.user_data.get('kelas','')}\n"
             f"📚 *Subjek:* {context.user_data.get('subjek','')}\n\n"
-            "📸 Sila hantar **2 gambar** kelas relief."
+            "📸 Sila hantar **2 gambar** kelas relief.",
+            parse_mode="Markdown"
         )
-
-        await send_menu(query, context, text, None)
 
 
 # ==================================================
 # IMAGE HANDLER
 # ==================================================
 async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        user = update.effective_user
+        photo = update.message.photo[-1]
+        file = await photo.get_file()
 
-    photo = update.message.photo[-1]
-    file = await photo.get_file()
+        filename = f"{user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+        await file.download_to_drive(filename)
 
-    filename = f"{update.effective_user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
-    await file.download_to_drive(filename)
+        blob = bucket.blob(f"relief/{filename}")
+        blob.upload_from_filename(filename, content_type="image/jpeg")
 
-    blob = bucket.blob(f"relief/{filename}")
-    blob.upload_from_filename(filename, content_type="image/jpeg")
+        image_url = blob.generate_signed_url(version="v4", expiration=60*60*24*7, method="GET")
 
-    url = blob.generate_signed_url(version="v4", expiration=604800, method="GET")
+        context.user_data.setdefault("images", []).append(image_url)
 
-    context.user_data.setdefault("images", []).append(url)
+        if len(context.user_data["images"]) < 2:
+            return
 
-    if len(context.user_data["images"]) < 2:
-        return
+        img1, img2 = context.user_data["images"]
+        last_row = len(sheet.get_all_values()) + 1
 
-    img1, img2 = context.user_data["images"]
+        sheet.update(
+            range_name=f"A{last_row}:I{last_row}",
+            values=[[
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                context.user_data.get("tarikh", datetime.now().strftime("%Y-%m-%d")),
+                context.user_data.get("masa", ""),
+                context.user_data.get("guru_pengganti", ""),
+                context.user_data.get("guru_diganti", ""),
+                context.user_data.get("kelas", ""),
+                context.user_data.get("subjek", ""),
+                img1,
+                img2
+            ]]
+        )
 
-    last_row = len(sheet.get_all_values()) + 1
+        sheet.update(range_name=f"J{last_row}", values=[[f"=IMAGE(H{last_row})"]], value_input_option="USER_ENTERED")
+        sheet.update(range_name=f"K{last_row}", values=[[f"=IMAGE(I{last_row})"]], value_input_option="USER_ENTERED")
 
-    sheet.update(
-        f"A{last_row}:I{last_row}",
-        [[
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            context.user_data.get("tarikh"),
-            context.user_data.get("masa"),
-            context.user_data.get("guru_pengganti"),
-            context.user_data.get("guru_diganti"),
-            context.user_data.get("kelas"),
-            context.user_data.get("subjek"),
-            img1,
-            img2
-        ]]
-    )
+        context.user_data.clear()
+        await update.message.reply_text("✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊")
 
-    context.user_data.clear()
+        os.remove(filename)
 
-    await update.message.reply_text("✅ Rekod relief berjaya dihantar. Terima kasih cikgu 😊")
-
-    os.remove(filename)
+    except Exception as e:
+        print("SYSTEM ERROR:", e)
+        await update.message.reply_text(
+            "⚠️ Berlaku ralat semasa proses muat naik.\nSila cuba semula atau maklumkan pentadbir."
+        )
 
 
 # ==================================================
-# RUN
+# RUN BOT
 # ==================================================
 def main():
-    app = ApplicationBuilder().token(TOKEN).build()
+    app = (
+        ApplicationBuilder()
+        .token(TOKEN)
+        .concurrent_updates(True)   # ⭐ UPGRADE PERCUMA
+        .build()
+    )
 
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.Regex("^🟢 Hari Ini$"), hari_ini))
-    app.add_handler(MessageHandler(filters.Regex("^📅 Tarikh Lain$"), tarikh_lain))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^🟢 Hari Ini$"), hari_ini))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^📅 Tarikh Lain$"), tarikh_lain))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("Semak Rekod"), semak_rekod))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("Lihat Rekod Penuh"), lihat_penuh))
     app.add_handler(CallbackQueryHandler(button))
     app.add_handler(MessageHandler(filters.PHOTO, gambar))
 
-    print("🤖 Bot Relief ULTRA sedang berjalan...")
+    print("🤖 Bot Relief STABLE sedang berjalan...")
     app.run_polling()
 
 
