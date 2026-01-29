@@ -1,8 +1,3 @@
-
-# ======================
-# BOT RELIEF CHECK-IN TRACKER (ANTI-SCROLL VERSION)
-# ======================
-
 import os
 import json
 from datetime import datetime, date, timedelta
@@ -101,26 +96,6 @@ def get_hari_bm(tarikh_iso):
         return ""
 
 # ==================================================
-# MESSAGE REPLACER (ANTI SCROLL UX)
-# ==================================================
-async def replace_message(query, context, text, keyboard=None, parse_mode=None):
-    try:
-        if "last_message_id" in context.user_data:
-            await query.message.chat.delete_message(
-                context.user_data["last_message_id"]
-            )
-    except:
-        pass
-
-    msg = await query.message.chat.send_message(
-        text=text,
-        reply_markup=InlineKeyboardMarkup(keyboard) if keyboard else None,
-        parse_mode=parse_mode
-    )
-
-    context.user_data["last_message_id"] = msg.message_id
-
-# ==================================================
 # START
 # ==================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -138,9 +113,62 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # ==================================================
+# SEMAK REKOD HARI INI
+# ==================================================
+async def semak_rekod(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    today_iso = datetime.now().strftime("%Y-%m-%d")
+    today_display = datetime.now().strftime("%d/%m/%Y")
+
+    rows = sheet.get_all_values()
+    data_rows = rows[1:] if len(rows) > 1 else []
+
+    rekod = [r for r in data_rows if len(r) > 1 and r[1] == today_iso]
+
+    if not rekod:
+        await update.message.reply_text(
+            f"📊 *Rekod Relief Hari Ini*\n📅 {today_display}\n\nTiada rekod direkodkan.",
+            parse_mode="Markdown"
+        )
+        return
+
+    mesej = f"📊 *REKOD RELIEF HARI INI*\n📅 {today_display}\n\n"
+
+    for i, r in enumerate(rekod, start=1):
+        mesej += (
+            f"{i}️⃣ {r[2]}\n"
+            f"👨‍🏫 Pengganti: {r[3]}\n"
+            f"👤 Diganti: {r[4]}\n"
+            f"🏫 {r[5]}\n"
+            f"📚 {r[6]}\n\n"
+        )
+
+    await update.message.reply_text(mesej, parse_mode="Markdown")
+
+# ==================================================
+# ADMIN LOCK - SHEET
+# ==================================================
+async def lihat_penuh(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    if update.effective_user.id not in ADMIN_IDS:
+        await update.message.reply_text(
+            "⛔ *Akses Terhad*\n\nHanya pentadbir boleh melihat rekod penuh.",
+            parse_mode="Markdown"
+        )
+        return
+
+    await update.message.reply_text("📊 *Rekod Relief Penuh:*", parse_mode="Markdown")
+    await update.message.reply_text(SHEET_URL)
+
+# ==================================================
 # HARI INI
 # ==================================================
 async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update.message.delete()
+    except:
+        pass
+
     context.user_data["tarikh"] = datetime.now().strftime("%Y-%m-%d")
 
     keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
@@ -154,6 +182,70 @@ async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["last_message_id"] = msg.message_id
 
 # ==================================================
+# TARIKH LAIN → TERUS KALENDAR
+# ==================================================
+async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update.message.delete()
+    except:
+        pass
+
+    today = date.today()
+    context.user_data["calendar_year"] = today.year
+    context.user_data["calendar_month"] = today.month
+
+    await show_calendar(update, context)
+
+# ==================================================
+# SHOW CALENDAR
+# ==================================================
+async def show_calendar(update, context):
+
+    year = context.user_data["calendar_year"]
+    month = context.user_data["calendar_month"]
+    today = date.today()
+
+    first_day = date(year, month, 1)
+    start_weekday = first_day.weekday()
+    days_in_month = (date(year + (month // 12), ((month % 12) + 1), 1) - timedelta(days=1)).day
+
+    keyboard = []
+
+    keyboard.append([
+        InlineKeyboardButton("⬅️", callback_data=f"cal_nav|{year}|{month-1}"),
+        InlineKeyboardButton(f"{first_day.strftime('%B')} {year}", callback_data="noop"),
+        InlineKeyboardButton("➡️", callback_data=f"cal_nav|{year}|{month+1}")
+    ])
+
+    weekdays = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+    keyboard.append([InlineKeyboardButton(d, callback_data="noop") for d in weekdays])
+
+    row = []
+    for _ in range(start_weekday):
+        row.append(InlineKeyboardButton(" ", callback_data="noop"))
+
+    for day in range(1, days_in_month + 1):
+        tarikh_ini = date(year, month, day)
+        label = f"🟢{day}" if tarikh_ini == today else str(day)
+        row.append(InlineKeyboardButton(label, callback_data=f"cal_day|{year}|{month}|{day}"))
+
+        if len(row) == 7:
+            keyboard.append(row)
+            row = []
+
+    if row:
+        while len(row) < 7:
+            row.append(InlineKeyboardButton(" ", callback_data="noop"))
+        keyboard.append(row)
+
+    msg = await update.effective_chat.send_message(
+        "🗓 Pilih tarikh rekod:",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+    context.user_data["last_message_id"] = msg.message_id
+
+# ==================================================
 # CALLBACK FLOW
 # ==================================================
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -161,52 +253,47 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     data = query.data
 
+    if data.startswith("cal_day|"):
+        _, year, month, day = data.split("|")
+
+        tarikh_obj = date(int(year), int(month), int(day))
+        if tarikh_obj > date.today():
+            await query.answer("❌ Tarikh tidak boleh melebihi hari ini", show_alert=True)
+            return
+
+        tarikh_iso = tarikh_obj.strftime("%Y-%m-%d")
+        context.user_data["tarikh"] = tarikh_iso
+
+        keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
+        await query.edit_message_text(
+            f"📅 Tarikh dipilih: *{format_tarikh_bm(tarikh_iso)}*\n\n⏰ Pilih masa:",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode="Markdown"
+        )
+        return
+
     key, *rest = data.split("|")
     value = rest[0] if rest else None
 
     if key == "masa":
         context.user_data["masa"] = value
         keyboard = [[InlineKeyboardButton(f"🟢 {g}", callback_data=f"guru_pengganti|{g}")] for g in GURU_LIST]
-
-        await replace_message(
-            query,
-            context,
-            "👨‍🏫 Pilih guru pengganti:",
-            keyboard
-        )
+        await query.edit_message_text("👨‍🏫 Pilih guru pengganti:", reply_markup=InlineKeyboardMarkup(keyboard))
 
     elif key == "guru_pengganti":
         context.user_data["guru_pengganti"] = value
         keyboard = [[InlineKeyboardButton(f"🔴 {g}", callback_data=f"guru_diganti|{g}")] for g in GURU_LIST]
-
-        await replace_message(
-            query,
-            context,
-            "👤 Pilih guru diganti:",
-            keyboard
-        )
+        await query.edit_message_text("👤 Pilih guru diganti:", reply_markup=InlineKeyboardMarkup(keyboard))
 
     elif key == "guru_diganti":
         context.user_data["guru_diganti"] = value
         keyboard = [[InlineKeyboardButton(k, callback_data=f"kelas|{k}")] for k in KELAS_LIST]
-
-        await replace_message(
-            query,
-            context,
-            "🏫 Pilih kelas:",
-            keyboard
-        )
+        await query.edit_message_text("🏫 Pilih kelas:", reply_markup=InlineKeyboardMarkup(keyboard))
 
     elif key == "kelas":
         context.user_data["kelas"] = value
         keyboard = [[InlineKeyboardButton(s, callback_data=f"subjek|{s}")] for s in SUBJEK_LIST]
-
-        await replace_message(
-            query,
-            context,
-            "📚 Pilih subjek:",
-            keyboard
-        )
+        await query.edit_message_text("📚 Pilih subjek:", reply_markup=InlineKeyboardMarkup(keyboard))
 
     elif key == "subjek":
         context.user_data["subjek"] = value
@@ -216,9 +303,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         tarikh_bm = format_tarikh_bm(tarikh_iso)
         hari_bm = get_hari_bm(tarikh_iso)
 
-        await replace_message(
-            query,
-            context,
+        await query.edit_message_text(
             f"📅 *Tarikh Rekod:* {tarikh_bm}\n"
             f"🗓 *Hari:* {hari_bm}\n"
             f"⏰ *Masa:* {context.user_data.get('masa','')}\n"
@@ -231,6 +316,61 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 # ==================================================
+# IMAGE HANDLER
+# ==================================================
+async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        user = update.effective_user
+        photo = update.message.photo[-1]
+        file = await photo.get_file()
+        filename = f"{user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+        await file.download_to_drive(filename)
+
+        blob = bucket.blob(f"relief/{filename}")
+        blob.upload_from_filename(filename, content_type="image/jpeg")
+
+        image_url = blob.generate_signed_url(version="v4", expiration=60*60*24*7, method="GET")
+
+        context.user_data.setdefault("images", []).append(image_url)
+        if len(context.user_data["images"]) < 2:
+            return
+
+        img1, img2 = context.user_data["images"]
+        last_row = len(sheet.get_all_values()) + 1
+
+        sheet.update(
+            range_name=f"A{last_row}:I{last_row}",
+            values=[[
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                context.user_data.get("tarikh", datetime.now().strftime("%Y-%m-%d")),
+                context.user_data.get("masa", ""),
+                context.user_data.get("guru_pengganti", ""),
+                context.user_data.get("guru_diganti", ""),
+                context.user_data.get("kelas", ""),
+                context.user_data.get("subjek", ""),
+                img1,
+                img2
+            ]]
+        )
+
+        sheet.update(range_name=f"J{last_row}", values=[[f"=IMAGE(H{last_row})"]], value_input_option="USER_ENTERED")
+        sheet.update(range_name=f"K{last_row}", values=[[f"=IMAGE(I{last_row})"]], value_input_option="USER_ENTERED")
+
+        context.user_data.clear()
+        await update.message.reply_text("✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊")
+
+        try:
+            os.remove(filename)
+        except:
+            pass
+
+    except Exception as e:
+        print("SYSTEM ERROR:", e)
+        await update.message.reply_text(
+            "⚠️ Berlaku ralat semasa proses muat naik.\nSila cuba semula atau maklumkan pentadbir."
+        )
+
+# ==================================================
 # RUN BOT
 # ==================================================
 def main():
@@ -238,9 +378,13 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^🟢 Hari Ini$"), hari_ini))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^📅 Tarikh Lain$"), tarikh_lain))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("Semak Rekod"), semak_rekod))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("Lihat Rekod Penuh"), lihat_penuh))
     app.add_handler(CallbackQueryHandler(button))
+    app.add_handler(MessageHandler(filters.PHOTO, gambar))
 
-    print("🤖 Bot Relief Anti-Scroll sedang berjalan...")
+    print("🤖 Bot Relief (Firebase) sedang berjalan...")
     app.run_polling()
 
 if __name__ == "__main__":
