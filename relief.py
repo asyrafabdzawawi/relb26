@@ -51,39 +51,39 @@ MASA_LIST = ["7.45–8.15", "8.15–8.45", "8.45–9.15", "9.15–9.45", "9.45�
              "10.15–10.45", "10.45–11.15", "11.15–11.45", "11.45–12.15", "12.15–12.45", "12.45–1.15"]
 
 GURU_LIST = [
-    "Mohd Faizal Bin Ahmad","Shahairi Bin Suratman","Mohd Khairul Nizam Bin Hazari",
-    "Wan Nurhaslinda Binti Wan Mazuki","Abdul Ghani Bin Abdul Karim","Abu Bakar Bin Sahari",
-    "Azizul Rahim Bin Ismail","Azlinawati Binti Yaakob","Azura Binti Mohamad","Basirah Binti Bacharudin",
-    "Chithrra A/P Damodharan","Endhumathy A/P Veeraiah","Fadzilah Binti Jahaya","Faridah Binti Muda",
-    "Masita Binti Ismail","Mazura Binti Abdul Aziz","Mohd Asri Bin Isma'ail","Mohd Huzaini Bin Husin",
-    "Mohd Noor Safwan Bin Md Noor","Muhammad Asyraf Bin Abdullah Zawawi","Muhammad Yusuf Bin Zainol Abidin",
-    "Noor Aizah Binti Ilias","Noor Azlin Binti Teh","Noor Azlinda Binti Abdullah",
-    "Noor Jareena Binti Mohamud Kassim","Normasita Bt Elias","Norul Fazlin Binti Zainal Karib",
-    "Nur Imanina Binti Shaari","Nurul Asyiqin Binti Osman","Nurulzahilah Binti Ibrahim",
-    "Puoneswari A/P Sundarajoo","Roslan Bin Mohd Yusoff","Rusmaliza Binti Abdul Rahman",
-    "Siti Rohayu Binti Zakaria","Siti Munirah Binti Munadzir","Suria Binti Ismail",
-    "Umamageswari A/P Muniandy","Uzma Farzana Binti Ridzuan","Wan Nur Aqielah Binti Wan Shahar",
-    "Za'aimah Binti Shakir","Zarina Binti Mohamad","Zuraini Binti Hassan"
+    "Mohd Faizal Bin Ahmad", "Shahairi Bin Suratman", "Mohd Khairul Nizam Bin Hazari",
+    "Wan Nurhaslinda Binti Wan Mazuki", "Abdul Ghani Bin Abdul Karim", "Abu Bakar Bin Sahari",
+    "Azizul Rahim Bin Ismail", "Azlinawati Binti Yaakob", "Azura Binti Mohamad", "Basirah Binti Bacharudin",
+    "Chithrra A/P Damodharan", "Endhumathy A/P Veeraiah", "Fadzilah Binti Jahaya", "Faridah Binti Muda",
+    "Masita Binti Ismail", "Mazura Binti Abdul Aziz", "Mohd Asri Bin Isma'ail", "Mohd Huzaini Bin Husin",
+    "Mohd Noor Safwan Bin Md Noor", "Muhammad Asyraf Bin Abdullah Zawawi", "Muhammad Yusuf Bin Zainol Abidin",
+    "Noor Aizah Binti Ilias", "Noor Azlin Binti Teh", "Noor Azlinda Binti Abdullah",
+    "Noor Jareena Binti Mohamud Kassim", "Normasita Bt Elias", "Norul Fazlin Binti Zainal Karib",
+    "Nur Imanina Binti Shaari", "Nurul Asyiqin Binti Osman", "Nurulzahilah Binti Ibrahim",
+    "Puoneswari A/P Sundarajoo", "Roslan Bin Mohd Yusoff", "Rusmaliza Binti Abdul Rahman",
+    "Siti Rohayu Binti Zakaria", "Siti Munirah Binti Munadzir", "Suria Binti Ismail",
+    "Umamageswari A/P Muniandy", "Uzma Farzana Binti Ridzuan", "Wan Nur Aqielah Binti Wan Shahar",
+    "Za'aimah Binti Shakir", "Zarina Binti Mohamad", "Zuraini Binti Hassan"
 ]
 
-KELAS_LIST = ["1 Amber","1 Amethyst","1 Aquamarine","2 Amber","2 Amethyst","2 Aquamarine",
-              "3 Amber","3 Amethyst","3 Aquamarine","4 Amber","4 Amethyst","4 Aquamarine",
-              "5 Amber","5 Amethyst","5 Aquamarine","6 Amber","6 Amethyst","6 Aquamarine"]
+KELAS_LIST = ["1 Amber", "1 Amethyst", "1 Aquamarine", "2 Amber", "2 Amethyst", "2 Aquamarine",
+              "3 Amber", "3 Amethyst", "3 Aquamarine", "4 Amber", "4 Amethyst", "4 Aquamarine",
+              "5 Amber", "5 Amethyst", "5 Aquamarine", "6 Amber", "6 Amethyst", "6 Aquamarine"]
 
-SUBJEK_LIST = ["Bahasa Melayu","Bahasa Inggeris","Bahasa Arab","Sains","Sejarah","Matematik",
-               "RBT","PJPK","PSV","Muzik","Moral","Pendidikan Islam"]
+SUBJEK_LIST = ["Bahasa Melayu", "Bahasa Inggeris", "Bahasa Arab", "Sains", "Sejarah", "Matematik",
+               "RBT", "PJPK", "PSV", "Muzik", "Moral", "Pendidikan Islam"]
 
 
 # ==================================================
-# 🔥 GRID KEYBOARD (ANTI-SCROLL)
+# GRID KEYBOARD (SAHAJA PERUBAHAN)
 # ==================================================
-def grid_keyboard(items, callback, cols=2, emoji=""):
+def grid_keyboard(items, callback_prefix, cols=2, emoji=None):
     keyboard = []
     row = []
 
     for item in items:
         text = f"{emoji} {item}" if emoji else item
-        row.append(InlineKeyboardButton(text, callback_data=f"{callback}|{item}"))
+        row.append(InlineKeyboardButton(text, callback_data=f"{callback_prefix}|{item}"))
 
         if len(row) == cols:
             keyboard.append(row)
@@ -142,6 +142,56 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ==================================================
+# SEMAK REKOD HARI INI
+# ==================================================
+async def semak_rekod(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    today_iso = datetime.now().strftime("%Y-%m-%d")
+    today_display = datetime.now().strftime("%d/%m/%Y")
+
+    rows = sheet.get_all_values()
+    data_rows = rows[1:] if len(rows) > 1 else []
+
+    rekod = [r for r in data_rows if len(r) > 1 and r[1] == today_iso]
+
+    if not rekod:
+        await update.message.reply_text(
+            f"📊 *Rekod Relief Hari Ini*\n📅 {today_display}\n\nTiada rekod direkodkan.",
+            parse_mode="Markdown"
+        )
+        return
+
+    mesej = f"📊 *REKOD RELIEF HARI INI*\n📅 {today_display}\n\n"
+
+    for i, r in enumerate(rekod, start=1):
+        mesej += (
+            f"{i}️⃣ {r[2]}\n"
+            f"👨‍🏫 Pengganti: {r[3]}\n"
+            f"👤 Diganti: {r[4]}\n"
+            f"🏫 {r[5]}\n"
+            f"📚 {r[6]}\n\n"
+        )
+
+    await update.message.reply_text(mesej, parse_mode="Markdown")
+
+
+# ==================================================
+# ADMIN LOCK
+# ==================================================
+async def lihat_penuh(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    if update.effective_user.id not in ADMIN_IDS:
+        await update.message.reply_text(
+            "⛔ *Akses Terhad*\n\nHanya pentadbir boleh melihat rekod penuh.",
+            parse_mode="Markdown"
+        )
+        return
+
+    await update.message.reply_text("📊 *Rekod Relief Penuh:*", parse_mode="Markdown")
+    await update.message.reply_text(SHEET_URL)
+
+
+# ==================================================
 # HARI INI
 # ==================================================
 async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -158,73 +208,6 @@ async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📅 Tarikh: *Hari Ini*\n\n⏰ Pilih masa:",
         reply_markup=keyboard,
         parse_mode="Markdown"
-    )
-
-    context.user_data["last_message_id"] = msg.message_id
-
-
-# ==================================================
-# TARIKH LAIN
-# ==================================================
-async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        await update.message.delete()
-    except:
-        pass
-
-    today = date.today()
-    context.user_data["calendar_year"] = today.year
-    context.user_data["calendar_month"] = today.month
-
-    await show_calendar(update, context)
-
-
-# ==================================================
-# SHOW CALENDAR
-# ==================================================
-async def show_calendar(update, context):
-
-    year = context.user_data["calendar_year"]
-    month = context.user_data["calendar_month"]
-    today = date.today()
-
-    first_day = date(year, month, 1)
-    start_weekday = first_day.weekday()
-    days_in_month = (date(year + (month // 12), ((month % 12) + 1), 1) - timedelta(days=1)).day
-
-    keyboard = []
-
-    keyboard.append([
-        InlineKeyboardButton("⬅️", callback_data=f"cal_nav|{year}|{month-1}"),
-        InlineKeyboardButton(f"{first_day.strftime('%B')} {year}", callback_data="noop"),
-        InlineKeyboardButton("➡️", callback_data=f"cal_nav|{year}|{month+1}")
-    ])
-
-    weekdays = ["Mo","Tu","We","Th","Fr","Sa","Su"]
-    keyboard.append([InlineKeyboardButton(d, callback_data="noop") for d in weekdays])
-
-    row = []
-    for _ in range(start_weekday):
-        row.append(InlineKeyboardButton(" ", callback_data="noop"))
-
-    for day in range(1, days_in_month + 1):
-        tarikh_ini = date(year, month, day)
-        label = f"🟢{day}" if tarikh_ini == today else str(day)
-
-        row.append(InlineKeyboardButton(label, callback_data=f"cal_day|{year}|{month}|{day}"))
-
-        if len(row) == 7:
-            keyboard.append(row)
-            row = []
-
-    if row:
-        while len(row) < 7:
-            row.append(InlineKeyboardButton(" ", callback_data="noop"))
-        keyboard.append(row)
-
-    msg = await update.effective_chat.send_message(
-        "🗓 Pilih tarikh rekod:",
-        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
     context.user_data["last_message_id"] = msg.message_id
@@ -310,7 +293,6 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
         photo = update.message.photo[-1]
         file = await photo.get_file()
-
         filename = f"{user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
         await file.download_to_drive(filename)
 
@@ -320,7 +302,6 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         image_url = blob.generate_signed_url(version="v4", expiration=60*60*24*7, method="GET")
 
         context.user_data.setdefault("images", []).append(image_url)
-
         if len(context.user_data["images"]) < 2:
             return
 
@@ -348,7 +329,10 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data.clear()
         await update.message.reply_text("✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊")
 
-        os.remove(filename)
+        try:
+            os.remove(filename)
+        except:
+            pass
 
     except Exception as e:
         print("SYSTEM ERROR:", e)
@@ -361,12 +345,7 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # RUN BOT
 # ==================================================
 def main():
-    app = (
-        ApplicationBuilder()
-        .token(TOKEN)
-        .concurrent_updates(True)   # ⭐ UPGRADE PERCUMA
-        .build()
-    )
+    app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^🟢 Hari Ini$"), hari_ini))
@@ -376,7 +355,7 @@ def main():
     app.add_handler(CallbackQueryHandler(button))
     app.add_handler(MessageHandler(filters.PHOTO, gambar))
 
-    print("🤖 Bot Relief STABLE sedang berjalan...")
+    print("🤖 Bot Relief (Firebase) sedang berjalan...")
     app.run_polling()
 
 
