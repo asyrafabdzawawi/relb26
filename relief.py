@@ -107,6 +107,37 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data["last_message_id"] = msg.message_id
 
+async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update.message.delete()
+    except:
+        pass
+
+    context.user_data["tarikh"] = datetime.now().strftime("%Y-%m-%d")
+
+    keyboard = [[InlineKeyboardButton(m, callback_data=f"masa|{m}")] for m in MASA_LIST]
+
+    msg = await update.effective_chat.send_message(
+        "📅 Tarikh: *Hari Ini*\n\n⏰ Pilih masa:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode="Markdown"
+    )
+
+    context.user_data["last_message_id"] = msg.message_id
+
+    async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update.message.delete()
+    except:
+        pass
+
+    today = date.today()
+    context.user_data["calendar_year"] = today.year
+    context.user_data["calendar_month"] = today.month
+
+    await show_calendar(update, context)
+
+
 # ==================================================
 # CALLBACK FLOW (ASAL + MENU UTAMA)
 # ==================================================
