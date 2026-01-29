@@ -145,7 +145,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # SEMAK REKOD HARI INI
 # ==================================================
 async def semak_rekod(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
     today_iso = datetime.now().strftime("%Y-%m-%d")
     today_display = datetime.now().strftime("%d/%m/%Y")
 
@@ -179,7 +178,6 @@ async def semak_rekod(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ADMIN LOCK
 # ==================================================
 async def lihat_penuh(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
     if update.effective_user.id not in ADMIN_IDS:
         await update.message.reply_text(
             "⛔ *Akses Terhad*\n\nHanya pentadbir boleh melihat rekod penuh.",
@@ -208,6 +206,73 @@ async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📅 Tarikh: *Hari Ini*\n\n⏰ Pilih masa:",
         reply_markup=keyboard,
         parse_mode="Markdown"
+    )
+
+    context.user_data["last_message_id"] = msg.message_id
+
+
+# ==================================================
+# TARIKH LAIN
+# ==================================================
+async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update.message.delete()
+    except:
+        pass
+
+    today = date.today()
+    context.user_data["calendar_year"] = today.year
+    context.user_data["calendar_month"] = today.month
+
+    await show_calendar(update, context)
+
+
+# ==================================================
+# SHOW CALENDAR
+# ==================================================
+async def show_calendar(update, context):
+
+    year = context.user_data["calendar_year"]
+    month = context.user_data["calendar_month"]
+    today = date.today()
+
+    first_day = date(year, month, 1)
+    start_weekday = first_day.weekday()
+    days_in_month = (date(year + (month // 12), ((month % 12) + 1), 1) - timedelta(days=1)).day
+
+    keyboard = []
+
+    keyboard.append([
+        InlineKeyboardButton("⬅️", callback_data=f"cal_nav|{year}|{month-1}"),
+        InlineKeyboardButton(f"{first_day.strftime('%B')} {year}", callback_data="noop"),
+        InlineKeyboardButton("➡️", callback_data=f"cal_nav|{year}|{month+1}")
+    ])
+
+    weekdays = ["Mo","Tu","We","Th","Fr","Sa","Su"]
+    keyboard.append([InlineKeyboardButton(d, callback_data="noop") for d in weekdays])
+
+    row = []
+    for _ in range(start_weekday):
+        row.append(InlineKeyboardButton(" ", callback_data="noop"))
+
+    for day in range(1, days_in_month + 1):
+        tarikh_ini = date(year, month, day)
+        label = f"🟢{day}" if tarikh_ini == today else str(day)
+
+        row.append(InlineKeyboardButton(label, callback_data=f"cal_day|{year}|{month}|{day}"))
+
+        if len(row) == 7:
+            keyboard.append(row)
+            row = []
+
+    if row:
+        while len(row) < 7:
+            row.append(InlineKeyboardButton(" ", callback_data="noop"))
+        keyboard.append(row)
+
+    msg = await update.effective_chat.send_message(
+        "🗓 Pilih tarikh rekod:",
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
     context.user_data["last_message_id"] = msg.message_id
