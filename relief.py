@@ -111,7 +111,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     reply_keyboard = [
         [KeyboardButton("🟢 Hari Ini"), KeyboardButton("📅 Tarikh Lain")],
-        [KeyboardButton("📊 Semak Rekod"), KeyboardButton("📊 Lihat Penuh (Admin)")]
+        [KeyboardButton("📊 Semak Rekod Hari Ini"), KeyboardButton("📊 Lihat Rekod Penuh (Admin)")]
     ]
 
     await update.message.reply_text(
