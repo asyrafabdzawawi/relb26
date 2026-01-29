@@ -226,7 +226,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(
             "👨‍🏫 Pilih guru pengganti:",
             reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton(g, callback_data=f"guru_pengganti|{g}")] for g in GURU_LIST]
+                [[InlineKeyboardButton(f"🟢 {g}", callback_data=f"guru_pengganti|{g}")] for g in GURU_LIST]
             )
         )
 
@@ -235,7 +235,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(
             "👤 Pilih guru diganti:",
             reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton(g, callback_data=f"guru_diganti|{g}")] for g in GURU_LIST]
+                [[InlineKeyboardButton(f"🔴 {g}", callback_data=f"guru_diganti|{g}")] for g in GURU_LIST]
             )
         )
 
@@ -315,7 +315,7 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         "✅ Rekod kelas relief berjaya dihantar.\n\n"
-        "📊 Untuk semak rekod, tekan **Semak Rekod** di bawah.",
+        "📊 Tekan **Semak Rekod** untuk melihat data.",
         parse_mode="Markdown"
     )
 
@@ -334,7 +334,7 @@ def main():
     app.add_handler(CallbackQueryHandler(button))
     app.add_handler(MessageHandler(filters.PHOTO, gambar))
 
-    print("🤖 Bot Relief (3-button) sedang berjalan...")
+    print("🤖 Bot Relief sedang berjalan...")
     app.run_polling()
 
 if __name__ == "__main__":
