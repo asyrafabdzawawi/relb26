@@ -375,7 +375,8 @@ def main():
 
     # ✅ NEW
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("Semak Rekod"), semak_rekod))
-    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("Lihat Penuh"), lihat_penuh))
+   app.add_handler(MessageHandler(filters.Text("📊 Lihat Rekod Penuh (Admin)"), lihat_penuh))
+
 
     app.add_handler(CallbackQueryHandler(button))
     app.add_handler(MessageHandler(filters.PHOTO, gambar))
