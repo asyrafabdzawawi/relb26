@@ -44,8 +44,8 @@ sheet = gc.open_by_key(SHEET_ID).sheet1
 # ==================================================
 MASA_LIST = [
     "7.45–8.15", "8.15–8.45", "8.45–9.15", "9.15–9.45", "9.45–10.15",
-    "10.15–10.45", "10.45–11.15", "11.15–11.45", "11.45–12.15",
-    "12.15–12.45", "12.45–1.15"
+    "10.15–10.45", "10.45–11.15", "11.15–11.45",
+    "11.45–12.15", "12.15–12.45", "12.45–1.15"
 ]
 
 GURU_LIST = [
@@ -112,12 +112,24 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     reply_keyboard = [[
         KeyboardButton("🟢 Hari Ini"),
-        KeyboardButton("📅 Tarikh Lain")
+        KeyboardButton("📅 Tarikh Lain"),
+        KeyboardButton("📊 Semak Rekod")
     ]]
 
     await update.message.reply_text(
-        "🤖 *Relief Check-In Tracker*\n\nPilih tarikh rekod:",
+        "🤖 *Relief Check-In Tracker*\n\nPilih tindakan:",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True),
+        parse_mode="Markdown"
+    )
+
+# ==================================================
+# SEMAK REKOD
+# ==================================================
+async def semak_rekod(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "📊 *Semakan Rekod Kelas Relief*\n\n"
+        "Sila tekan pautan di bawah:\n"
+        f"{SHEET_URL}",
         parse_mode="Markdown"
     )
 
@@ -166,13 +178,18 @@ async def show_calendar(update, context):
     weekdays = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
     keyboard.append([InlineKeyboardButton(d, callback_data="noop") for d in weekdays])
 
-    row = [" "] * start_weekday
-    for d in range(1, days_in_month + 1):
-        label = f"🟢{d}" if date(year, month, d) == today else str(d)
-        row.append(InlineKeyboardButton(label, callback_data=f"cal_day|{year}|{month}|{d}"))
+    row = []
+    for _ in range(start_weekday):
+        row.append(InlineKeyboardButton(" ", callback_data="noop"))
+
+    for day in range(1, days_in_month + 1):
+        tarikh_ini = date(year, month, day)
+        label = f"🟢{day}" if tarikh_ini == today else str(day)
+        row.append(InlineKeyboardButton(label, callback_data=f"cal_day|{year}|{month}|{day}"))
         if len(row) == 7:
             keyboard.append(row)
             row = []
+
     if row:
         keyboard.append(row)
 
@@ -182,16 +199,12 @@ async def show_calendar(update, context):
     )
 
 # ==================================================
-# CALLBACK
+# CALLBACK FLOW
 # ==================================================
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     data = query.data
-
-    if data == "menu_utama":
-        await start(query, context)
-        return
 
     if data.startswith("cal_day|"):
         _, y, m, d = data.split("|")
@@ -248,7 +261,15 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["subjek"] = value
         context.user_data["images"] = []
 
+        tarikh_iso = context.user_data.get("tarikh", "")
         await query.edit_message_text(
+            f"📅 *Tarikh Rekod:* {format_tarikh_bm(tarikh_iso)}\n"
+            f"🗓 *Hari:* {get_hari_bm(tarikh_iso)}\n"
+            f"⏰ *Masa:* {context.user_data.get('masa','')}\n"
+            f"👨‍🏫 *Guru Pengganti:* {context.user_data.get('guru_pengganti','')}\n"
+            f"👤 *Guru Diganti:* {context.user_data.get('guru_diganti','')}\n"
+            f"🏫 *Kelas:* {context.user_data.get('kelas','')}\n"
+            f"📚 *Subjek:* {context.user_data.get('subjek','')}\n\n"
             "📸 Sila hantar **2 gambar** kelas relief.",
             parse_mode="Markdown"
         )
@@ -266,9 +287,9 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     blob = bucket.blob(f"relief/{filename}")
     blob.upload_from_filename(filename, content_type="image/jpeg")
-    url = blob.generate_signed_url(version="v4", expiration=60*60*24*7, method="GET")
+    image_url = blob.generate_signed_url(version="v4", expiration=60*60*24*7, method="GET")
 
-    context.user_data.setdefault("images", []).append(url)
+    context.user_data.setdefault("images", []).append(image_url)
     if len(context.user_data["images"]) < 2:
         return
 
@@ -290,21 +311,18 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     sheet.update(f"J{row}", [[f"=IMAGE(H{row})"]], value_input_option="USER_ENTERED")
     sheet.update(f"K{row}", [[f"=IMAGE(I{row})"]], value_input_option="USER_ENTERED")
 
-    keyboard = [[
-        InlineKeyboardButton("🏠 Menu Utama", callback_data="menu_utama"),
-        InlineKeyboardButton("📊 Lihat Rekod", url=SHEET_URL)
-    ]]
+    context.user_data.clear()
 
     await update.message.reply_text(
-        "✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊",
-        reply_markup=InlineKeyboardMarkup(keyboard)
+        "✅ Rekod kelas relief berjaya dihantar.\n\n"
+        "📊 Untuk semak rekod, tekan **Semak Rekod** di bawah.",
+        parse_mode="Markdown"
     )
 
-    context.user_data.clear()
     os.remove(filename)
 
 # ==================================================
-# RUN
+# RUN BOT
 # ==================================================
 def main():
     app = ApplicationBuilder().token(TOKEN).build()
@@ -312,10 +330,11 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^🟢 Hari Ini$"), hari_ini))
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^📅 Tarikh Lain$"), tarikh_lain))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^📊 Semak Rekod$"), semak_rekod))
     app.add_handler(CallbackQueryHandler(button))
     app.add_handler(MessageHandler(filters.PHOTO, gambar))
 
-    print("🤖 Bot Relief berjalan...")
+    print("🤖 Bot Relief (3-button) sedang berjalan...")
     app.run_polling()
 
 if __name__ == "__main__":
