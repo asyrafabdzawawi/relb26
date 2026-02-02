@@ -141,7 +141,7 @@ def get_sheet_by_month(tarikh_iso):
 
     bulan_map = {
         1: "Sheet1",
-        2: "FEBRUARI",
+        2: "Februari",
         3: "MAC",
         4: "APRIL",
         5: "MEI",
