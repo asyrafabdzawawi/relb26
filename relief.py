@@ -185,7 +185,10 @@ async def semak_rekod(update: Update, context: ContextTypes.DEFAULT_TYPE):
     today_iso = datetime.now().strftime("%Y-%m-%d")
     today_display = datetime.now().strftime("%d/%m/%Y")
 
-    rows = sheet.get_all_values()
+    # PATCH: baca tab ikut bulan semasa
+    today_sheet = get_sheet_by_month(today_iso)
+
+    rows = today_sheet.get_all_values()
     data_rows = rows[1:] if len(rows) > 1 else []
 
     rekod = [r for r in data_rows if len(r) > 1 and r[1] == today_iso]
