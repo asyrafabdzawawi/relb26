@@ -23,8 +23,8 @@ FIREBASE_BUCKET = "relief-31bc6.firebasestorage.app"
 ADMIN_IDS = [
     522707506,      # Admin utama
     3998287,      # Admin 2
-    5114021646       # Admin 3
-    14518619
+    5114021646,      # Admin 3
+    14518619,
     53256464
 ]
 
