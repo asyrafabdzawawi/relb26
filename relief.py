@@ -21,9 +21,9 @@ SHEET_URL = "https://docs.google.com/spreadsheets/d/1bBnCG5ODsqQspRj_-fViRIXJGMo
 FIREBASE_BUCKET = "relief-31bc6.firebasestorage.app"
 
 ADMIN_IDS = [
-    522707506,      # Admin utama
-    3998287,      # Admin 2
-    5114021646,      # Admin 3
+    522707506,
+    3998287,
+    5114021646,
     14518619,
     53256464,
     8214543588
@@ -48,7 +48,10 @@ sheet_creds = Credentials.from_service_account_info(
     json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"]), scopes=SCOPES
 )
 gc = gspread.authorize(sheet_creds)
-sheet = gc.open_by_key(SHEET_ID).februari
+
+# PATCH: kekalkan sheet asal + tambah akses spreadsheet
+spreadsheet = gc.open_by_key(SHEET_ID)
+sheet = spreadsheet.sheet1   # JANUARI (default)
 
 
 # ==================================================
@@ -82,7 +85,7 @@ SUBJEK_LIST = ["Bahasa Melayu", "Bahasa Inggeris", "Bahasa Arab", "Sains", "Seja
 
 
 # ==================================================
-# GRID KEYBOARD (SAHAJA PERUBAHAN)
+# GRID KEYBOARD
 # ==================================================
 def grid_keyboard(items, callback_prefix, cols=2, emoji=None):
     keyboard = []
@@ -128,6 +131,33 @@ def get_hari_bm(tarikh_iso):
         return hari_map.get(dt.strftime("%A"), dt.strftime("%A"))
     except:
         return ""
+
+
+# ==================================================
+# PATCH: PILIH SHEET IKUT BULAN
+# ==================================================
+def get_sheet_by_month(tarikh_iso):
+    dt = datetime.strptime(tarikh_iso, "%Y-%m-%d")
+
+    bulan_map = {
+        1: "Sheet1",
+        2: "FEBRUARI",
+        3: "MAC",
+        4: "APRIL",
+        5: "MEI",
+        6: "JUN",
+        7: "JULAI",
+        8: "OGOS",
+        9: "SEPTEMBER",
+        10: "OKTOBER",
+        11: "NOVEMBER",
+        12: "DISEMBER"
+    }
+
+    try:
+        return spreadsheet.worksheet(bulan_map[dt.month])
+    except:
+        return spreadsheet.sheet1
 
 
 # ==================================================
@@ -358,7 +388,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ==================================================
-# IMAGE HANDLER
+# IMAGE HANDLER (PATCH DI SINI)
 # ==================================================
 async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -378,25 +408,30 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         img1, img2 = context.user_data["images"]
-        last_row = len(sheet.get_all_values()) + 1
 
-        sheet.update(
-            range_name=f"A{last_row}:I{last_row}",
-            values=[[
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                context.user_data.get("tarikh", datetime.now().strftime("%Y-%m-%d")),
-                context.user_data.get("masa", ""),
-                context.user_data.get("guru_pengganti", ""),
-                context.user_data.get("guru_diganti", ""),
-                context.user_data.get("kelas", ""),
-                context.user_data.get("subjek", ""),
-                img1,
-                img2
-            ]]
+        tarikh_iso = context.user_data.get(
+            "tarikh", datetime.now().strftime("%Y-%m-%d")
         )
 
-        sheet.update(range_name=f"J{last_row}", values=[[f"=IMAGE(H{last_row})"]], value_input_option="USER_ENTERED")
-        sheet.update(range_name=f"K{last_row}", values=[[f"=IMAGE(I{last_row})"]], value_input_option="USER_ENTERED")
+        sheet = get_sheet_by_month(tarikh_iso)
+
+        # LATEST DI ATAS (ROW 2)
+        sheet.insert_row([
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            tarikh_iso,
+            context.user_data.get("masa", ""),
+            context.user_data.get("guru_pengganti", ""),
+            context.user_data.get("guru_diganti", ""),
+            context.user_data.get("kelas", ""),
+            context.user_data.get("subjek", ""),
+            img1,
+            img2,
+            "",
+            ""
+        ], 2)
+
+        sheet.update("J2", [["=IMAGE(H2)"]], value_input_option="USER_ENTERED")
+        sheet.update("K2", [["=IMAGE(I2)"]], value_input_option="USER_ENTERED")
 
         context.user_data.clear()
         await update.message.reply_text("✅ Rekod kelas relief berjaya dihantar.\nTerima kasih cikgu 😊")
