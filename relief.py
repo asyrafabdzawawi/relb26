@@ -48,7 +48,7 @@ sheet_creds = Credentials.from_service_account_info(
     json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"]), scopes=SCOPES
 )
 gc = gspread.authorize(sheet_creds)
-sheet = gc.open_by_key(SHEET_ID).sheet1
+sheet = gc.open_by_key(SHEET_ID).februari
 
 
 # ==================================================
