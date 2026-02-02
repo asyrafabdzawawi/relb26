@@ -20,7 +20,13 @@ SHEET_ID = "1bBnCG5ODsqQspRj_-fViRIXJGMo0w7hgbTH6p56gNuM"
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1bBnCG5ODsqQspRj_-fViRIXJGMo0w7hgbTH6p56gNuM/edit"
 FIREBASE_BUCKET = "relief-31bc6.firebasestorage.app"
 
-ADMIN_IDS = [522707506]
+ADMIN_IDS = [
+    522707506,      # Admin utama
+    3998287,      # Admin 2
+    5114021646       # Admin 3
+    14518619
+    53256464
+]
 
 
 # ==================================================
