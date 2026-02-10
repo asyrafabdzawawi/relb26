@@ -163,14 +163,6 @@ def plot_bar(counter, tajuk, filename, top=5):
     if not data:
         return None
 
-    # buang yang 0 (guru langsung tak mengganti)
-    data = [(k, v) for k, v in counter.items() if v > 0]
-
-    if not data:
-        return None
-
-    # susun dari paling sedikit
-    data = sorted(data, key=lambda x: x[1])[:bottom]
     labels = [d[0] for d in data]
     values = [d[1] for d in data]
 
@@ -183,6 +175,31 @@ def plot_bar(counter, tajuk, filename, top=5):
     plt.close()
 
     return filename
+
+def plot_bar_kurang(counter, tajuk, filename, bottom=5):
+    if not counter:
+        return None
+
+    data = [(k, v) for k, v in counter.items() if v > 0]
+    if not data:
+        return None
+
+    data = sorted(data, key=lambda x: x[1])[:bottom]
+
+    labels = [d[0] for d in data]
+    values = [d[1] for d in data]
+
+    plt.figure(figsize=(8,4))
+    plt.bar(labels, values)
+    plt.title(tajuk)
+    plt.xticks(rotation=30, ha="right")
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.close()
+
+    return filename
+
+
 
 def get_julat_ahad_khamis():
     today = date.today()
