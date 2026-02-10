@@ -221,9 +221,7 @@ def bina_pdf(gambar_list):
     story = []
 
     ahad, khamis = get_julat_ahad_khamis()
-    # === Tambahan: Guru paling kurang mengganti ===
-    _, _, guru_ganti, _ = get_data_7_hari()
-    guru_kurang, bil = get_paling_kurang(guru_ganti)
+    
 
 
     tarikh_teks = (
@@ -233,15 +231,9 @@ def bina_pdf(gambar_list):
     )
 
     story.append(Paragraph(tarikh_teks, styles["Normal"]))
-    story.append(Spacer(1, 12))
+    
 
-    if guru_kurang:
-        story.append(
-            Paragraph(
-            f"Guru Paling Kurang Mengganti: {guru_kurang} ({bil} kali)",
-            styles["Normal"]
-        )
-    )
+    
     story.append(Spacer(1, 12))
 
 
