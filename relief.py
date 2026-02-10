@@ -130,6 +130,10 @@ def get_paling_kurang(counter):
         if v == min_val:
             return k, v
 
+def get_guru_tiada_ganti(guru_list, guru_ganti_counter):
+    return [g for g in guru_list if guru_ganti_counter.get(g, 0) == 0]
+
+
 
 def get_data_7_hari():
     hari_ini = date.today()
@@ -239,6 +243,21 @@ def bina_pdf(gambar_list):
 
     story.append(Paragraph("<b>ANALISIS RELIEF MINGGUAN</b>", styles["Title"]))
     story.append(Spacer(1, 12))
+
+    # === Senarai guru 0 kali mengganti (TEKS SAHAJA) ===
+    _, _, guru_ganti, _ = get_data_7_hari()
+    guru_0 = get_guru_tiada_ganti(GURU_LIST, guru_ganti)
+
+    if guru_0:
+        story.append(Paragraph(
+            "<b>Guru Tidak Terlibat Dalam Relief Minggu Ini:</b>",
+            styles["Heading3"]
+    ))
+
+    senarai = ", ".join(guru_0)
+    story.append(Paragraph(senarai, styles["Normal"]))
+    story.append(Spacer(1, 12))
+
 
     for tajuk, img in gambar_list:
         story.append(Paragraph(tajuk, styles["Heading2"]))
