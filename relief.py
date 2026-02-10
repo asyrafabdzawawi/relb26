@@ -13,6 +13,7 @@ from google.oauth2.service_account import Credentials
 from collections import Counter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import cm
 import matplotlib.pyplot as plt
 
 
@@ -86,6 +87,40 @@ KELAS_LIST = ["1 Amber", "1 Amethyst", "1 Aquamarine", "2 Amber", "2 Amethyst", 
 
 SUBJEK_LIST = ["Bahasa Melayu", "Bahasa Inggeris", "Bahasa Arab", "Sains", "Sejarah", "Matematik",
                "RBT", "PJPK", "PSV", "Muzik", "Moral", "Pendidikan Islam"]
+
+def header_footer(canvas, doc):
+    canvas.saveState()
+
+    # ===== HEADER =====
+    canvas.setFont("Helvetica-Bold", 10)
+    canvas.drawCentredString(
+        doc.pagesize[0] / 2,
+        doc.pagesize[1] - 1.5 * cm,
+        "RELIEF CHECK-IN TRACKER SK LABU BESAR"
+    )
+
+    # Garis bawah header
+    canvas.line(
+        2 * cm,
+        doc.pagesize[1] - 1.7 * cm,
+        doc.pagesize[0] - 2 * cm,
+        doc.pagesize[1] - 1.7 * cm
+    )
+
+    # ===== FOOTER =====
+    canvas.setFont("Helvetica", 9)
+    canvas.drawCentredString(
+        doc.pagesize[0] / 2,
+        1.5 * cm,
+        "Sinergi Ke Arah Lonjakan Bestari"
+    )
+    canvas.drawCentredString(
+        doc.pagesize[0] / 2,
+        1.0 * cm,
+        "#LabuBest"
+    )
+
+    canvas.restoreState()
 
 def get_data_7_hari():
     hari_ini = date.today()
@@ -170,7 +205,12 @@ def bina_pdf(gambar_list):
         story.append(Image(img, width=400, height=200))
         story.append(Spacer(1, 20))
 
-    doc.build(story)
+    doc.build(
+    story,
+    onFirstPage=header_footer,
+    onLaterPages=header_footer
+    )
+
     return filename
 # ==================================================
 # GRID KEYBOARD
