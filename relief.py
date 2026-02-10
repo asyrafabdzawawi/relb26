@@ -132,11 +132,35 @@ def plot_bar(counter, tajuk, filename, top=5):
 
     return filename
 
+def get_julat_ahad_khamis():
+    today = date.today()
+    # Monday=0 ... Sunday=6
+    hari_ke = today.weekday()
+
+    # Cari Ahad
+    ahad = today - timedelta(days=(hari_ke + 1) % 7)
+
+    # Khamis = Ahad + 4 hari
+    khamis = ahad + timedelta(days=4)
+
+    return ahad, khamis
+
 def bina_pdf(gambar_list):
     filename = f"Analisis_Relief_{date.today()}.pdf"
     doc = SimpleDocTemplate(filename)
     styles = getSampleStyleSheet()
     story = []
+
+    ahad, khamis = get_julat_ahad_khamis()
+
+    tarikh_teks = (
+    f"Tempoh Analisis: "
+    f"{ahad.strftime('%d/%m/%Y')} (Ahad) "
+    f"hingga {khamis.strftime('%d/%m/%Y')} (Khamis)"
+    )
+
+    story.append(Paragraph(tarikh_teks, styles["Normal"]))
+    story.append(Spacer(1, 12))
 
     story.append(Paragraph("<b>ANALISIS RELIEF MINGGUAN</b>", styles["Title"]))
     story.append(Spacer(1, 12))
