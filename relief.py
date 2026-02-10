@@ -10,6 +10,10 @@ from firebase_admin import credentials, storage
 
 import gspread
 from google.oauth2.service_account import Credentials
+from collections import Counter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+import matplotlib.pyplot as plt
 
 
 # ==================================================
@@ -83,7 +87,67 @@ KELAS_LIST = ["1 Amber", "1 Amethyst", "1 Aquamarine", "2 Amber", "2 Amethyst", 
 SUBJEK_LIST = ["Bahasa Melayu", "Bahasa Inggeris", "Bahasa Arab", "Sains", "Sejarah", "Matematik",
                "RBT", "PJPK", "PSV", "Muzik", "Moral", "Pendidikan Islam"]
 
+def get_data_7_hari():
+    hari_ini = date.today()
+    mula = hari_ini - timedelta(days=6)
 
+    kelas = Counter()
+    subjek = Counter()
+    guru_ganti = Counter()
+    guru_diganti = Counter()
+
+    for i in range(7):
+        tarikh = mula + timedelta(days=i)
+        tarikh_iso = tarikh.strftime("%Y-%m-%d")
+        sheet = get_sheet_by_month(tarikh_iso)
+
+        rows = sheet.get_all_values()
+        data = rows[1:] if len(rows) > 1 else []
+
+        for r in data:
+            if len(r) < 7 or r[1] != tarikh_iso:
+                continue
+            kelas[r[5]] += 1
+            subjek[r[6]] += 1
+            guru_ganti[r[3]] += 1
+            guru_diganti[r[4]] += 1
+
+    return kelas, subjek, guru_ganti, guru_diganti
+
+def plot_bar(counter, tajuk, filename, top=5):
+    data = counter.most_common(top)
+    if not data:
+        return None
+
+    labels = [d[0] for d in data]
+    values = [d[1] for d in data]
+
+    plt.figure(figsize=(8,4))
+    plt.bar(labels, values)
+    plt.title(tajuk)
+    plt.xticks(rotation=30, ha="right")
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.close()
+
+    return filename
+
+def bina_pdf(gambar_list):
+    filename = f"Analisis_Relief_{date.today()}.pdf"
+    doc = SimpleDocTemplate(filename)
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph("<b>ANALISIS RELIEF MINGGUAN</b>", styles["Title"]))
+    story.append(Spacer(1, 12))
+
+    for tajuk, img in gambar_list:
+        story.append(Paragraph(tajuk, styles["Heading2"]))
+        story.append(Image(img, width=400, height=200))
+        story.append(Spacer(1, 20))
+
+    doc.build(story)
+    return filename
 # ==================================================
 # GRID KEYBOARD
 # ==================================================
@@ -163,13 +227,45 @@ def get_sheet_by_month(tarikh_iso):
 # ==================================================
 # START
 # ==================================================
+async def analisis_pdf(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("⏳ Menjana laporan analisis mingguan...")
+
+    kelas, subjek, guru_ganti, guru_diganti = get_data_7_hari()
+
+    if not kelas:
+        await update.message.reply_text("Tiada data relief untuk 7 hari terakhir.")
+        return
+
+    files = []
+    files.append(("🏫 Kelas Paling Banyak Diganti", plot_bar(kelas, "Kelas Diganti", "kelas.png")))
+    files.append(("📚 Subjek Paling Banyak Diganti", plot_bar(subjek, "Subjek Diganti", "subjek.png")))
+    files.append(("👨‍🏫 Guru Paling Banyak Mengganti", plot_bar(guru_ganti, "Guru Mengganti", "guru_ganti.png")))
+    files.append(("👤 Guru Paling Banyak Diganti", plot_bar(guru_diganti, "Guru Diganti", "guru_diganti.png")))
+
+    files = [f for f in files if f[1]]
+
+    pdf = bina_pdf(files)
+
+    await update.message.reply_document(
+        document=open(pdf, "rb"),
+        caption="📊 Laporan Analisis Relief Mingguan"
+    )
+
+    # cleanup
+    for _, f in files:
+        os.remove(f)
+    os.remove(pdf)
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
 
     reply_keyboard = [
-        [KeyboardButton("🟢 Hari Ini"), KeyboardButton("📅 Tarikh Lain")],
-        [KeyboardButton("📊 Semak Rekod Hari Ini"), KeyboardButton("📊 Lihat Rekod Penuh (Admin)")]
-    ]
+    [KeyboardButton("🟢 Hari Ini"), KeyboardButton("📅 Tarikh Lain")],
+    [KeyboardButton("📊 Semak Rekod Hari Ini"), KeyboardButton("📈 Analisis Mingguan (PDF)")],
+    [KeyboardButton("📊 Lihat Rekod Penuh (Admin)")]
+]
+
 
     await update.message.reply_text(
         "🤖 *Relief Check-In Tracker*\n\nPilih tindakan:",
@@ -464,6 +560,8 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("Lihat Rekod Penuh"), lihat_penuh))
     app.add_handler(CallbackQueryHandler(button))
     app.add_handler(MessageHandler(filters.PHOTO, gambar))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("Analisis Mingguan \\(PDF\\)"), analisis_pdf))
+
 
     print("🤖 Bot Relief (Firebase) sedang berjalan...")
     app.run_polling()
