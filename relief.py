@@ -122,6 +122,15 @@ def header_footer(canvas, doc):
 
     canvas.restoreState()
 
+def get_paling_kurang(counter):
+    if not counter:
+        return None, 0
+    min_val = min(counter.values())
+    for k, v in counter.items():
+        if v == min_val:
+            return k, v
+
+
 def get_data_7_hari():
     hari_ini = date.today()
     mula = hari_ini - timedelta(days=6)
@@ -187,6 +196,10 @@ def bina_pdf(gambar_list):
     story = []
 
     ahad, khamis = get_julat_ahad_khamis()
+    # === Tambahan: Guru paling kurang mengganti ===
+    _, _, guru_ganti, _ = get_data_7_hari()
+    guru_kurang, bil = get_paling_kurang(guru_ganti)
+
 
     tarikh_teks = (
     f"Tempoh Analisis: "
@@ -196,6 +209,16 @@ def bina_pdf(gambar_list):
 
     story.append(Paragraph(tarikh_teks, styles["Normal"]))
     story.append(Spacer(1, 12))
+
+    if guru_kurang:
+        story.append(
+            Paragraph(
+            f"Guru Paling Kurang Mengganti: {guru_kurang} ({bil} kali)",
+            styles["Normal"]
+        )
+    )
+    story.append(Spacer(1, 12))
+
 
     story.append(Paragraph("<b>ANALISIS RELIEF MINGGUAN</b>", styles["Title"]))
     story.append(Spacer(1, 12))
