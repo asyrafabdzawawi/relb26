@@ -163,6 +163,14 @@ def plot_bar(counter, tajuk, filename, top=5):
     if not data:
         return None
 
+    # buang yang 0 (guru langsung tak mengganti)
+    data = [(k, v) for k, v in counter.items() if v > 0]
+
+    if not data:
+        return None
+
+    # susun dari paling sedikit
+    data = sorted(data, key=lambda x: x[1])[:bottom]
     labels = [d[0] for d in data]
     values = [d[1] for d in data]
 
@@ -328,6 +336,9 @@ async def analisis_pdf(update: Update, context: ContextTypes.DEFAULT_TYPE):
     files.append(("📚 Subjek Paling Banyak Diganti", plot_bar(subjek, "Subjek Diganti", "subjek.png")))
     files.append(("👨‍🏫 Guru Paling Banyak Mengganti", plot_bar(guru_ganti, "Guru Mengganti", "guru_ganti.png")))
     files.append(("👤 Guru Paling Banyak Diganti", plot_bar(guru_diganti, "Guru Diganti", "guru_diganti.png")))
+    files.append(("👨‍🏫 Guru Paling Kurang Mengganti",
+    plot_bar_kurang(guru_ganti, "Guru Paling Kurang Mengganti", "guru_kurang.png", bottom=5)))
+
 
     files = [f for f in files if f[1]]
 
