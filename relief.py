@@ -7,6 +7,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 
 import firebase_admin
 from firebase_admin import credentials, storage
+from reportlab.platypus import KeepTogether
 
 import gspread
 from google.oauth2.service_account import Credentials
@@ -260,9 +261,14 @@ def bina_pdf(gambar_list):
 
 
     for tajuk, img in gambar_list:
-        story.append(Paragraph(tajuk, styles["Heading2"]))
-        story.append(Image(img, width=400, height=200))
-        story.append(Spacer(1, 20))
+        section = []
+
+        section.append(Paragraph(tajuk, styles["Heading2"]))
+        section.append(Spacer(1, 6))
+        section.append(Image(img, width=400, height=200))
+        section.append(Spacer(1, 20))
+
+        story.append(KeepTogether(section))
 
     doc.build(
     story,
