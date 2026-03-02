@@ -1,6 +1,8 @@
 import os
 import json
+import pytz
 from datetime import datetime, date, timedelta
+
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
@@ -17,7 +19,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm
 import matplotlib.pyplot as plt
 
-
+MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
 # ==================================================
 # CONFIG
 # ==================================================
@@ -137,7 +139,7 @@ def get_guru_tiada_ganti(guru_list, guru_ganti_counter):
 
 
 def get_data_7_hari():
-    hari_ini = date.today()
+    hari_ini = datetime.now(MALAYSIA_TZ).date()
     mula = hari_ini - timedelta(days=6)
 
     kelas = Counter()
@@ -207,7 +209,7 @@ def plot_bar_kurang(counter, tajuk, filename, bottom=5):
 
 
 def get_julat_ahad_khamis():
-    today = date.today()
+    today = datetime.now(MALAYSIA_TZ).date()
     # Monday=0 ... Sunday=6
     hari_ke = today.weekday()
 
@@ -220,7 +222,7 @@ def get_julat_ahad_khamis():
     return ahad, khamis
 
 def bina_pdf(gambar_list):
-    filename = f"Analisis_Relief_{date.today()}.pdf"
+    filename = f"Analisis_Relief_{datetime.now(MALAYSIA_TZ).date()}.pdf"
     doc = SimpleDocTemplate(filename)
     styles = getSampleStyleSheet()
     story = []
@@ -410,8 +412,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # SEMAK REKOD HARI INI
 # ==================================================
 async def semak_rekod(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    today_iso = datetime.now().strftime("%Y-%m-%d")
-    today_display = datetime.now().strftime("%d/%m/%Y")
+    today_iso = datetime.now(MALAYSIA_TZ).strftime("%Y-%m-%d")
+    today_display = datetime.now(MALAYSIA_TZ).strftime("%d/%m/%Y")
 
     # PATCH: baca tab ikut bulan semasa
     today_sheet = get_sheet_by_month(today_iso)
@@ -466,7 +468,7 @@ async def hari_ini(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except:
         pass
 
-    context.user_data["tarikh"] = datetime.now().strftime("%Y-%m-%d")
+    context.user_data["tarikh"] = datetime.now(MALAYSIA_TZ).strftime("%Y-%m-%d")
 
     keyboard = grid_keyboard(MASA_LIST, "masa", cols=2)
 
@@ -488,7 +490,7 @@ async def tarikh_lain(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except:
         pass
 
-    today = date.today()
+    today = datetime.now(MALAYSIA_TZ).date()
     context.user_data["calendar_year"] = today.year
     context.user_data["calendar_month"] = today.month
 
@@ -502,7 +504,7 @@ async def show_calendar(update, context):
 
     year = context.user_data["calendar_year"]
     month = context.user_data["calendar_month"]
-    today = date.today()
+    today = datetime.now(MALAYSIA_TZ).date()
 
     first_day = date(year, month, 1)
     start_weekday = first_day.weekday()
@@ -558,7 +560,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         _, year, month, day = data.split("|")
 
         tarikh_obj = date(int(year), int(month), int(day))
-        if tarikh_obj > date.today():
+        if tarikh_obj > datetime.now(MALAYSIA_TZ).date():
             await query.answer("❌ Tarikh tidak boleh melebihi hari ini", show_alert=True)
             return
 
@@ -626,7 +628,7 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
         photo = update.message.photo[-1]
         file = await photo.get_file()
-        filename = f"{user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+        filename = f"{user.id}_{datetime.now(MALAYSIA_TZ).strftime('%Y%m%d_%H%M%S')}.jpg"
         await file.download_to_drive(filename)
 
         blob = bucket.blob(f"relief/{filename}")
@@ -641,14 +643,14 @@ async def gambar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         img1, img2 = context.user_data["images"]
 
         tarikh_iso = context.user_data.get(
-            "tarikh", datetime.now().strftime("%Y-%m-%d")
+            "tarikh", datetime.now(MALAYSIA_TZ).strftime("%Y-%m-%d")
         )
 
         sheet = get_sheet_by_month(tarikh_iso)
 
         # LATEST DI ATAS (ROW 2)
         sheet.insert_row([
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            datetime.now(MALAYSIA_TZ).strftime("%Y-%m-%d %H:%M:%S"),
             tarikh_iso,
             context.user_data.get("masa", ""),
             context.user_data.get("guru_pengganti", ""),
