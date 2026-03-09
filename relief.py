@@ -70,18 +70,14 @@ MASA_LIST = ["7.45–8.15", "8.15–8.45", "8.45–9.15", "9.15–9.45", "9.45�
 
 GURU_LIST = [
     "Mohd Faizal Bin Ahmad", "Shahairi Bin Suratman", "Mohd Khairul Nizam Bin Hazari",
-    "Wan Nurhaslinda Binti Wan Mazuki", "Abdul Ghani Bin Abdul Karim", "Abu Bakar Bin Sahari",
-    "Azizul Rahim Bin Ismail", "Azlinawati Binti Yaakob", "Azura Binti Mohamad", "Basirah Binti Bacharudin",
-    "Chithrra A/P Damodharan", "Endhumathy A/P Veeraiah", "Fadzilah Binti Jahaya", "Faridah Binti Muda",
-    "Masita Binti Ismail", "Mazura Binti Abdul Aziz", "Mohd Asri Bin Isma'ail", "Mohd Huzaini Bin Husin",
-    "Mohd Noor Safwan Bin Md Noor", "Muhammad Asyraf Bin Abdullah Zawawi", "Muhammad Yusuf Bin Zainol Abidin",
-    "Noor Aizah Binti Ilias", "Noor Azlin Binti Teh", "Noor Azlinda Binti Abdullah",
-    "Noor Jareena Binti Mohamud Kassim", "Normasita Bt Elias", "Norul Fazlin Binti Zainal Karib",
-    "Nur Imanina Binti Shaari", "Nurul Asyiqin Binti Osman", "Nurulzahilah Binti Ibrahim",
-    "Puoneswari A/P Sundarajoo", "Roslan Bin Mohd Yusoff", "Rusmaliza Binti Abdul Rahman",
-    "Siti Rohayu Binti Zakaria", "Siti Munirah Binti Munadzir", "Suria Binti Ismail",
-    "Umamageswari A/P Muniandy", "Uzma Farzana Binti Ridzuan", "Wan Nur Aqielah Binti Wan Shahar",
-    "Za'aimah Binti Shakir", "Zarina Binti Mohamad", "Zuraini Binti Hassan"
+    "Suemanie A.P. Ee @Quah Chin We", "Abdul Ghani Bin Abdul Karim", "Abu Bakar Bin Sahari", "Mohd Asri Bin Isma'ail",
+    "Muhammad Asyraf Bin Abdullah Zawawi", "Azizul Rahim Bin Ismail", "Nurul Asyiqin Binti Osman", "Azlinawati Binti Yaakob", 
+     "Noor Aizah Binti Ilias",  "Noor Azlin Binti Teh", "Noor Azlinda Binti Abdullah", "Azura Binti Mohamad", "Basirah Binti Bacharudin",
+    "Chithrra A/P Damodharan", "Endhumathy A/P Veeraiah", "Fadzilah Binti Jahaya", "Faridah Binti Muda","Norul Fazlin Binti Zainal Karib",
+    "Nur Imanina Binti Shaari", "Masita Binti Ismail", "Mazura Binti Abdul Aziz",  "Siti Munirah Binti Munadzir","Normasita Bt Elias", "Mohd Huzaini Bin Husin",
+     "Noor Jareena Binti Mohamud Kassim", "Mohd Noor Safwan Bin Md Noor","Puoneswari A/P Sundarajoo", "Roslan Bin Mohd Yusoff","Rusmaliza Binti Abdul Rahman",
+    "Siti Rohayu Binti Zakaria","Suria Binti Ismail", "Umamageswari A/P Muniandy", "Uzma Farzana Binti Ridzuan", "Wan Nur Aqielah Binti Wan Shahar","Muhammad Yusuf Bin Zainol Abidin",
+      "Za'aimah Binti Shakir", "Nurulzahilah Binti Ibrahim", "Zarina Binti Mohamad", "Zuraini Binti Hassan"
 ]
 
 GURU_DISPLAY = {
