@@ -92,8 +92,16 @@ GURU_DISPLAY = {
 
     "Abdul Ghani Bin Abdul Karim": "Abdul Ghani",
     "Abu Bakar Bin Sahari": "Abu Bakar",
+    
+    "Mohd Asri Bin Isma'ail": "Asri",
+    "Muhammad Asyraf Bin Abdullah Zawawi": "Asyraf",
     "Azizul Rahim Bin Ismail": "Azizul Rahim",
+    "Nurul Asyiqin Binti Osman": "Asyiqin",
     "Azlinawati Binti Yaakob": "Azlinawati",
+    "Noor Aizah Binti Ilias": "Aizah",
+    "Noor Azlin Binti Teh": "Azlin",
+    
+    "Noor Azlinda Binti Abdullah": "Azlinda",
     "Azura Binti Mohamad": "Azura",
     "Basirah Binti Bacharudin": "Basirah",
 
@@ -101,41 +109,41 @@ GURU_DISPLAY = {
     "Endhumathy A/P Veeraiah": "Endhumathy",
     "Fadzilah Binti Jahaya": "Fadzilah",
     "Faridah Binti Muda": "Faridah",
+    "Norul Fazlin Binti Zainal Karib": "Fazlin",
+
+      "Nur Imanina Binti Shaari": "Imanina",
 
     "Masita Binti Ismail": "Masita",
     "Mazura Binti Abdul Aziz": "Mazura",
-    "Mohd Asri Bin Isma'ail": "Asri",
+    "Siti Munirah Binti Munadzir": "Munirah",
+    "Normasita Bt Elias": "Normasita",
     "Mohd Huzaini Bin Husin": "Huzaini",
+
+     "Noor Jareena Binti Mohamud Kassim": "Jareena",
+
     "Mohd Noor Safwan Bin Md Noor": "Safwan",
 
-    "Muhammad Asyraf Bin Abdullah Zawawi": "Asyraf",
-    "Muhammad Yusuf Bin Zainol Abidin": "Yusuf",
+   
 
-    "Noor Aizah Binti Ilias": "Aizah",
-    "Noor Azlin Binti Teh": "Azlin",
-    "Noor Azlinda Binti Abdullah": "Azlinda",
-    "Noor Jareena Binti Mohamud Kassim": "Jareena",
 
-    "Normasita Bt Elias": "Normasita",
-    "Norul Fazlin Binti Zainal Karib": "Fazlin",
-
-    "Nur Imanina Binti Shaari": "Imanina",
-    "Nurul Asyiqin Binti Osman": "Asyiqin",
-    "Nurulzahilah Binti Ibrahim": "Zahilah",
+    
 
     "Puoneswari A/P Sundarajoo": "Puoneswari",
     "Roslan Bin Mohd Yusoff": "Roslan",
     "Rusmaliza Binti Abdul Rahman": "Rusmaliza",
 
     "Siti Rohayu Binti Zakaria": "Rohayu",
-    "Siti Munirah Binti Munadzir": "Munirah",
+   
     "Suria Binti Ismail": "Suria",
 
     "Umamageswari A/P Muniandy": "Umamageswari",
     "Uzma Farzana Binti Ridzuan": "Uzma",
-    "Wan Nur Aqielah Binti Wan Shahar": "Aqielah",
+    "Wan Nur Aqielah Binti Wan Shahar": "Wan Aqielah",
+
+     "Muhammad Yusuf Bin Zainol Abidin": "Yusuf",
 
     "Za'aimah Binti Shakir": "Za'aimah",
+     "Nurulzahilah Binti Ibrahim": "Zahilah",
     "Zarina Binti Mohamad": "Zarina",
     "Zuraini Binti Hassan": "Zuraini"
 }
