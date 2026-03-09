@@ -84,7 +84,7 @@ GURU_DISPLAY = {
     "Mohd Faizal Bin Ahmad": "GB",
     "Shahairi Bin Suratman": "PK1",
     "Mohd Khairul Nizam Bin Hazari": "PK HEM",
-    "Wan Nurhaslinda Binti Wan Mazuki": "PK KOKU",
+    "Suemanie A.P. Ee @Quah Chin We": "PK KOKU",
 
     "Abdul Ghani Bin Abdul Karim": "Abdul Ghani",
     "Abu Bakar Bin Sahari": "Abu Bakar",
