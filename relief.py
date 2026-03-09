@@ -75,8 +75,8 @@ GURU_LIST = [
      "Noor Aizah Binti Ilias",  "Noor Azlin Binti Teh", "Noor Azlinda Binti Abdullah", "Azura Binti Mohamad", "Basirah Binti Bacharudin",
     "Chithrra A/P Damodharan", "Endhumathy A/P Veeraiah", "Fadzilah Binti Jahaya", "Faridah Binti Muda","Norul Fazlin Binti Zainal Karib",
     "Nur Imanina Binti Shaari", "Masita Binti Ismail", "Mazura Binti Abdul Aziz",  "Siti Munirah Binti Munadzir","Normasita Bt Elias", "Mohd Huzaini Bin Husin",
-     "Noor Jareena Binti Mohamud Kassim", "Mohd Noor Safwan Bin Md Noor","Puoneswari A/P Sundarajoo", "Roslan Bin Mohd Yusoff","Rusmaliza Binti Abdul Rahman",
-    "Siti Rohayu Binti Zakaria","Suria Binti Ismail", "Umamageswari A/P Muniandy", "Uzma Farzana Binti Ridzuan", "Wan Nur Aqielah Binti Wan Shahar","Muhammad Yusuf Bin Zainol Abidin",
+     "Noor Jareena Binti Mohamud Kassim", "Puoneswari A/P Sundarajoo", "Roslan Bin Mohd Yusoff","Rusmaliza Binti Abdul Rahman",
+    "Siti Rohayu Binti Zakaria","Mohd Noor Safwan Bin Md Noor","Suria Binti Ismail", "Umamageswari A/P Muniandy", "Uzma Farzana Binti Ridzuan", "Wan Nur Aqielah Binti Wan Shahar","Muhammad Yusuf Bin Zainol Abidin",
       "Za'aimah Binti Shakir", "Nurulzahilah Binti Ibrahim", "Zarina Binti Mohamad", "Zuraini Binti Hassan"
 ]
 
@@ -117,7 +117,7 @@ GURU_DISPLAY = {
 
      "Noor Jareena Binti Mohamud Kassim": "Jareena",
 
-    "Mohd Noor Safwan Bin Md Noor": "Safwan",
+    
 
    
 
@@ -129,7 +129,8 @@ GURU_DISPLAY = {
     "Rusmaliza Binti Abdul Rahman": "Rusmaliza",
 
     "Siti Rohayu Binti Zakaria": "Rohayu",
-   
+
+    "Mohd Noor Safwan Bin Md Noor": "Safwan",
     "Suria Binti Ismail": "Suria",
 
     "Umamageswari A/P Muniandy": "Umamageswari",
