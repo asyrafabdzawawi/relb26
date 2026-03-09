@@ -84,6 +84,62 @@ GURU_LIST = [
     "Za'aimah Binti Shakir", "Zarina Binti Mohamad", "Zuraini Binti Hassan"
 ]
 
+GURU_DISPLAY = {
+    "Mohd Faizal Bin Ahmad": "GB",
+    "Shahairi Bin Suratman": "PK1",
+    "Mohd Khairul Nizam Bin Hazari": "PK HEM",
+    "Wan Nurhaslinda Binti Wan Mazuki": "PK KOKU",
+
+    "Abdul Ghani Bin Abdul Karim": "Abdul Ghani",
+    "Abu Bakar Bin Sahari": "Abu Bakar",
+    "Azizul Rahim Bin Ismail": "Azizul Rahim",
+    "Azlinawati Binti Yaakob": "Azlinawati",
+    "Azura Binti Mohamad": "Azura",
+    "Basirah Binti Bacharudin": "Basirah",
+
+    "Chithrra A/P Damodharan": "Chithrra",
+    "Endhumathy A/P Veeraiah": "Endhumathy",
+    "Fadzilah Binti Jahaya": "Fadzilah",
+    "Faridah Binti Muda": "Faridah",
+
+    "Masita Binti Ismail": "Masita",
+    "Mazura Binti Abdul Aziz": "Mazura",
+    "Mohd Asri Bin Isma'ail": "Mohd Asri",
+    "Mohd Huzaini Bin Husin": "Mohd Huzaini",
+    "Mohd Noor Safwan Bin Md Noor": "Mohd Noor Safwan",
+
+    "Muhammad Asyraf Bin Abdullah Zawawi": "Muhammad Asyraf",
+    "Muhammad Yusuf Bin Zainol Abidin": "Muhammad Yusuf",
+
+    "Noor Aizah Binti Ilias": "Noor Aizah",
+    "Noor Azlin Binti Teh": "Noor Azlin",
+    "Noor Azlinda Binti Abdullah": "Noor Azlinda",
+    "Noor Jareena Binti Mohamud Kassim": "Noor Jareena",
+
+    "Normasita Bt Elias": "Normasita",
+    "Norul Fazlin Binti Zainal Karib": "Norul Fazlin",
+
+    "Nur Imanina Binti Shaari": "Nur Imanina",
+    "Nurul Asyiqin Binti Osman": "Nurul Asyiqin",
+    "Nurulzahilah Binti Ibrahim": "Nurulzahilah",
+
+    "Puoneswari A/P Sundarajoo": "Puoneswari",
+    "Roslan Bin Mohd Yusoff": "Roslan",
+    "Rusmaliza Binti Abdul Rahman": "Rusmaliza",
+
+    "Siti Rohayu Binti Zakaria": "Siti Rohayu",
+    "Siti Munirah Binti Munadzir": "Siti Munirah",
+    "Suria Binti Ismail": "Suria",
+
+    "Umamageswari A/P Muniandy": "Umamageswari",
+    "Uzma Farzana Binti Ridzuan": "Uzma Farzana",
+    "Wan Nur Aqielah Binti Wan Shahar": "Wan Nur Aqielah",
+
+    "Za'aimah Binti Shakir": "Za'aimah",
+    "Zarina Binti Mohamad": "Zarina",
+    "Zuraini Binti Hassan": "Zuraini"
+}
+
 KELAS_LIST = ["1 Amber", "1 Amethyst", "1 Aquamarine", "2 Amber", "2 Amethyst", "2 Aquamarine",
               "3 Amber", "3 Amethyst", "3 Aquamarine", "4 Amber", "4 Amethyst", "4 Aquamarine",
               "5 Amber", "5 Amethyst", "5 Aquamarine", "6 Amber", "6 Amethyst", "6 Aquamarine"]
@@ -287,8 +343,15 @@ def grid_keyboard(items, callback_prefix, cols=2, emoji=None):
     row = []
 
     for item in items:
-        text = f"{emoji} {item}" if emoji else item
-        row.append(InlineKeyboardButton(text, callback_data=f"{callback_prefix}|{item}"))
+
+        # paparan nama pendek
+        display = GURU_DISPLAY.get(item, item)
+
+        text = f"{emoji} {display}" if emoji else display
+
+        row.append(
+            InlineKeyboardButton(text, callback_data=f"{callback_prefix}|{item}")
+        )
 
         if len(row) == cols:
             keyboard.append(row)
