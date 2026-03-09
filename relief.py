@@ -104,36 +104,36 @@ GURU_DISPLAY = {
 
     "Masita Binti Ismail": "Masita",
     "Mazura Binti Abdul Aziz": "Mazura",
-    "Mohd Asri Bin Isma'ail": "Mohd Asri",
-    "Mohd Huzaini Bin Husin": "Mohd Huzaini",
-    "Mohd Noor Safwan Bin Md Noor": "Mohd Noor Safwan",
+    "Mohd Asri Bin Isma'ail": "Asri",
+    "Mohd Huzaini Bin Husin": "Huzaini",
+    "Mohd Noor Safwan Bin Md Noor": "Safwan",
 
-    "Muhammad Asyraf Bin Abdullah Zawawi": "Muhammad Asyraf",
-    "Muhammad Yusuf Bin Zainol Abidin": "Muhammad Yusuf",
+    "Muhammad Asyraf Bin Abdullah Zawawi": "Asyraf",
+    "Muhammad Yusuf Bin Zainol Abidin": "Yusuf",
 
-    "Noor Aizah Binti Ilias": "Noor Aizah",
-    "Noor Azlin Binti Teh": "Noor Azlin",
-    "Noor Azlinda Binti Abdullah": "Noor Azlinda",
-    "Noor Jareena Binti Mohamud Kassim": "Noor Jareena",
+    "Noor Aizah Binti Ilias": "Aizah",
+    "Noor Azlin Binti Teh": "Azlin",
+    "Noor Azlinda Binti Abdullah": "Azlinda",
+    "Noor Jareena Binti Mohamud Kassim": "Jareena",
 
     "Normasita Bt Elias": "Normasita",
-    "Norul Fazlin Binti Zainal Karib": "Norul Fazlin",
+    "Norul Fazlin Binti Zainal Karib": "Fazlin",
 
-    "Nur Imanina Binti Shaari": "Nur Imanina",
-    "Nurul Asyiqin Binti Osman": "Nurul Asyiqin",
-    "Nurulzahilah Binti Ibrahim": "Nurulzahilah",
+    "Nur Imanina Binti Shaari": "Imanina",
+    "Nurul Asyiqin Binti Osman": "Asyiqin",
+    "Nurulzahilah Binti Ibrahim": "Zahilah",
 
     "Puoneswari A/P Sundarajoo": "Puoneswari",
     "Roslan Bin Mohd Yusoff": "Roslan",
     "Rusmaliza Binti Abdul Rahman": "Rusmaliza",
 
-    "Siti Rohayu Binti Zakaria": "Siti Rohayu",
-    "Siti Munirah Binti Munadzir": "Siti Munirah",
+    "Siti Rohayu Binti Zakaria": "Rohayu",
+    "Siti Munirah Binti Munadzir": "Munirah",
     "Suria Binti Ismail": "Suria",
 
     "Umamageswari A/P Muniandy": "Umamageswari",
-    "Uzma Farzana Binti Ridzuan": "Uzma Farzana",
-    "Wan Nur Aqielah Binti Wan Shahar": "Wan Nur Aqielah",
+    "Uzma Farzana Binti Ridzuan": "Uzma",
+    "Wan Nur Aqielah Binti Wan Shahar": "Aqielah",
 
     "Za'aimah Binti Shakir": "Za'aimah",
     "Zarina Binti Mohamad": "Zarina",
