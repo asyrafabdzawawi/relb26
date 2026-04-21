@@ -90,7 +90,7 @@ GURU_DISPLAY = {
     "Abu Bakar Bin Sahari": "Abu Bakar",
     
     "Mohd Asri Bin Isma'ail": "Asri",
-    "Mohamad Hamdan Bin Mohd Noor": "Hamdan",
+    
     "Muhammad Asyraf Bin Abdullah Zawawi": "Asyraf",
     "Azizul Rahim Bin Ismail": "Azizul Rahim",
     "Nurul Asyiqin Binti Osman": "Asyiqin",
@@ -107,6 +107,7 @@ GURU_DISPLAY = {
     "Fadzilah Binti Jahaya": "Fadzilah",
     "Faridah Binti Muda": "Faridah",
     "Norul Fazlin Binti Zainal Karib": "Fazlin",
+    "Mohamad Hamdan Bin Mohd Noor": "Hamdan",
 
       "Nur Imanina Binti Shaari": "Imanina",
 
