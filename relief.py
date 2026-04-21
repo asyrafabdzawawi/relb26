@@ -70,12 +70,12 @@ MASA_LIST = ["7.45–8.15", "8.15–8.45", "8.45–9.15", "9.15–9.45", "9.45�
 
 GURU_LIST = [
     "Mohd Faizal Bin Ahmad", "Shahairi Bin Suratman", "Mohd Khairul Nizam Bin Hazari",
-    "Suemanie A.P. Ee @Quah Chin We", "Abdul Ghani Bin Abdul Karim", "Abu Bakar Bin Sahari", "Mohd Asri Bin Isma'ail", "Mohamad Hamdan Bin Mohd Noor",
+    "Suemanie A.P. Ee @Quah Chin We", "Abdul Ghani Bin Abdul Karim", "Abu Bakar Bin Sahari", "Mohd Asri Bin Isma'ail", 
     "Muhammad Asyraf Bin Abdullah Zawawi", "Azizul Rahim Bin Ismail", "Nurul Asyiqin Binti Osman", "Azlinawati Binti Yaakob", 
      "Noor Aizah Binti Ilias",  "Noor Azlin Binti Teh", "Noor Azlinda Binti Abdullah", "Azura Binti Mohamad", "Basirah Binti Bacharudin",
-    "Chithrra A/P Damodharan", "Endhumathy A/P Veeraiah", "Fadzilah Binti Jahaya", "Faridah Binti Muda","Norul Fazlin Binti Zainal Karib",
-    "Nur Imanina Binti Shaari", "Masita Binti Ismail", "Mazura Binti Abdul Aziz",  "Siti Munirah Binti Munadzir","Normasita Bt Elias", "Mohd Huzaini Bin Husin",
-     "Noor Jareena Binti Mohamud Kassim", "Roslan Bin Mohd Yusoff","Rusmaliza Binti Abdul Rahman",
+    "Chithrra A/P Damodharan", "Endhumathy A/P Veeraiah", "Fadzilah Binti Jahaya", "Faridah Binti Muda","Norul Fazlin Binti Zainal Karib","Mohamad Hamdan Bin Mohd Noor", "Mohd Huzaini Bin Husin",
+    "Nur Imanina Binti Shaari", "Noor Jareena Binti Mohamud Kassim", "Masita Binti Ismail", "Mazura Binti Abdul Aziz",  "Siti Munirah Binti Munadzir","Normasita Bt Elias",
+ "Roslan Bin Mohd Yusoff","Rusmaliza Binti Abdul Rahman",
     "Siti Rohayu Binti Zakaria","Mohd Noor Safwan Bin Md Noor","Suria Binti Ismail", "Umamageswari A/P Muniandy", "Uzma Farzana Binti Ridzuan", "Wan Nur Aqielah Binti Wan Shahar","Muhammad Yusuf Bin Zainol Abidin",
       "Za'aimah Binti Shakir", "Nurulzahilah Binti Ibrahim", "Zarina Binti Mohamad", "Zuraini Binti Hassan"
 ]
@@ -108,16 +108,19 @@ GURU_DISPLAY = {
     "Faridah Binti Muda": "Faridah",
     "Norul Fazlin Binti Zainal Karib": "Fazlin",
     "Mohamad Hamdan Bin Mohd Noor": "Hamdan",
+     "Mohd Huzaini Bin Husin": "Huzaini",
+    
 
       "Nur Imanina Binti Shaari": "Imanina",
+     "Noor Jareena Binti Mohamud Kassim": "Jareena",
 
     "Masita Binti Ismail": "Masita",
     "Mazura Binti Abdul Aziz": "Mazura",
     "Siti Munirah Binti Munadzir": "Munirah",
     "Normasita Bt Elias": "Normasita",
-    "Mohd Huzaini Bin Husin": "Huzaini",
+   
 
-     "Noor Jareena Binti Mohamud Kassim": "Jareena",
+    
 
     
 
